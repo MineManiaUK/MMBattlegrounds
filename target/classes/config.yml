@@ -10,6 +10,12 @@ sudden-death-length: 1800000
 # Final world boarder size
 boarder-size: 10
 
+# Min amount of ticks which a drop takes to fall
+drop-mix-ticks: 4800
+
+# Max amount of ticks which a drop takes to fall
+drop-max-ticks: 7201
+
 # Commands disabled in sudden death
 sudden-death-disabled-commands:
   - "/sethome"

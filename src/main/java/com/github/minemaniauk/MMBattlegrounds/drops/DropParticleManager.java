@@ -32,7 +32,10 @@ public class DropParticleManager {
         Location start = randomStart(end);
         Location control = randomControl(start, end);
 
-        int totalTicks = ThreadLocalRandom.current().nextInt(2400, 3601);
+        int minTime = plugin.getConfig().getInt("drop-mix-ticks");
+        int maxTime = plugin.getConfig().getInt("drop-max-ticks");
+
+        int totalTicks = ThreadLocalRandom.current().nextInt(minTime, maxTime);
 
         new BukkitRunnable() {
             int tick = 0;
