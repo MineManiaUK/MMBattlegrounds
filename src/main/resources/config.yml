@@ -16,6 +16,12 @@ drop-mix-ticks: 4800
 # Max amount of ticks which a drop takes to fall
 drop-max-ticks: 7201
 
+# Enable end crystal explosions
+end-crystals: false
+
+# Enable respawn anchors explosions
+respawn-anchors: false
+
 # Commands disabled in sudden death
 sudden-death-disabled-commands:
   - "/sethome"

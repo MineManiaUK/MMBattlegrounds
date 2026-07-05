@@ -7,11 +7,15 @@ import com.github.minemaniauk.MMBattlegrounds.drops.DropManager;
 import org.bukkit.*;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.entity.ExplosionPrimeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.meta.FireworkMeta;
@@ -263,6 +267,24 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
             if (event.getCause() == PlayerPortalEvent.TeleportCause.NETHER_PORTAL || event.getCause() == PlayerTeleportEvent.TeleportCause.END_PORTAL) {
                 event.setCancelled(true);
                 event.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('&', "&c&l> &cportals are disabled in sudden death."));
+            }
+        }
+    }
+
+    @EventHandler
+    public void onEntityExplosion(EntityExplodeEvent event) {
+        if (event.getEntity().getType() == EntityType.END_CRYSTAL) {
+            if (!config.getBoolean("end-crystals")) {
+                event.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onBlockExplosion(BlockExplodeEvent event) {
+        if (event.getExplodedBlockState().getType() == Material.RESPAWN_ANCHOR){
+            if (!config.getBoolean("respawn-anchors")) {
+                event.setCancelled(true);
             }
         }
     }

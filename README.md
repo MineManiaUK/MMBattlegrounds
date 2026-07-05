@@ -42,6 +42,12 @@ drop-mix-ticks: 4800
 # Max amount of ticks which a drop takes to fall
 drop-max-ticks: 7201
 
+# Enable end crystal explosions
+end-crystals: false
+
+# Enable respawn anchors explosions
+respawn-anchors: false
+
 # Commands which are disabled in sudden death (Players which have "mmbattlegrounds.bypass.commanddisablement" are not affected)
 sudden-death-disabled-commands:
   - "/sethome"
