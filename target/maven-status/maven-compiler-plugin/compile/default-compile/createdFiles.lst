@@ -1,0 +1,17 @@
+com\github\minemaniauk\MMBattlegrounds\MMBattlegrounds$2.class
+com\github\minemaniauk\MMBattlegrounds\commands\drops\DropSetItems.class
+com\github\minemaniauk\MMBattlegrounds\ScoreboardManager$1.class
+com\github\minemaniauk\MMBattlegrounds\drops\DropManager.class
+com\github\minemaniauk\MMBattlegrounds\MMBattlegrounds$1.class
+com\github\minemaniauk\MMBattlegrounds\commands\drops\DropCreate.class
+com\github\minemaniauk\MMBattlegrounds\commands\drops\DropRemove.class
+com\github\minemaniauk\MMBattlegrounds\drops\Drop.class
+com\github\minemaniauk\MMBattlegrounds\commands\drops\DropSelect.class
+com\github\minemaniauk\MMBattlegrounds\GamePhase.class
+com\github\minemaniauk\MMBattlegrounds\commands\StartSuddenDeath.class
+com\github\minemaniauk\MMBattlegrounds\drops\DropParticleManager.class
+com\github\minemaniauk\MMBattlegrounds\MMBattlegrounds.class
+com\github\minemaniauk\MMBattlegrounds\commands\drops\DropSetLocation.class
+com\github\minemaniauk\MMBattlegrounds\drops\DropParticleManager$1.class
+com\github\minemaniauk\MMBattlegrounds\ScoreboardManager.class
+com\github\minemaniauk\MMBattlegrounds\commands\drops\DropSpawn.class

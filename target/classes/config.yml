@@ -1,0 +1,32 @@
+# The time at which sudden death is scheduled to start unix time
+sudden-death-start:
+
+# Remaining time in millis in sudden death for team disbanding
+sudden-death-team-disband-time: 900000
+
+# Amount of millis which sudden death boarder should shrink over
+sudden-death-length: 1800000
+
+# Final world boarder size
+boarder-size: 10
+
+# Commands disabled in sudden death
+sudden-death-disabled-commands:
+  - "/sethome"
+  - "/home"
+  - "/delhome"
+  - "/listhome"
+  - "/renamehome"
+  - "/relocatehome"
+  - "/spawn"
+  - "/tpa"
+  - "/tpaccept"
+  - "/tpdeny"
+  - "/team sethome"
+  - "/team setwarp"
+  - "/team home"
+  - "/team warp"
+  - "/team warps"
+
+no-teams-disabled-commands:
+  - "/team"

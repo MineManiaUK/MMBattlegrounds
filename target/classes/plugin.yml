@@ -1,0 +1,31 @@
+name: MMBattlegrounds
+version: '1.0.0'
+
+main: com.github.minemaniauk.MMBattlegrounds.MMBattlegrounds
+api-version: '26.1'
+depend:
+  - FastAsyncWorldEdit
+softDepend:
+  - BetterTeams
+  - HomePlugin
+commands:
+  startsuddendeath:
+    permission: "mmbattlegrounds.suddendeath.start"
+  dropcreate:
+    permission: "mmbattlegrounds.drop.create"
+  dropremove:
+    permission: "mmbattlegrounds.drop.remove"
+  dropselect:
+    permission: "mmbattlegrounds.drop.select"
+  dropsetitems:
+    permission: "mmbattlegrounds.drop.set.items"
+  dropsetlocation:
+    permission: "mmbattlegrounds.drop.set.location"
+  dropspawn:
+    permission: "mmbattlegrounds.drop.spawn"
+
+permissions:
+  mmbattlegrounds.bypass.commanddisablement:
+    description: Allows bypassing disabled command restrictions
+    default: op
+
