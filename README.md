@@ -27,7 +27,7 @@ These are supply drops which can be activated by staff.
 # The timestamp in Unix millis until sudden death is scheduled to start (visual only sudden death must be started manually with /startsuddendeath) 
 sudden-death-start:
 
-# The amount of time remaining in the sudden death length before teams are disbanded
+# The amount of time remaining in millis in the sudden death length before teams are disbanded
 sudden-death-team-disband-time: 900000
 
 # Amount of time in millis which sudden death boarder should shrink over
