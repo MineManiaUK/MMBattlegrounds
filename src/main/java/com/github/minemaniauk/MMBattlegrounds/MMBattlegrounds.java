@@ -7,28 +7,25 @@ import com.github.minemaniauk.MMBattlegrounds.drops.DropManager;
 import org.bukkit.*;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Firework;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockExplodeEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
-import org.bukkit.event.entity.ExplosionPrimeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public final class MMBattlegrounds extends JavaPlugin implements Listener {
@@ -46,7 +43,7 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
     public long suddenDeathLength; // Amount of millis which sudden death boarder should shrink over
     public GamePhase gamePhase;
     public List<Player> alivePlayers = new ArrayList<>(); // Used in sudden death
-
+    private final Map<UUID, Long> lastPvPDamage = new HashMap<>();
 
     @Override
     public void onEnable() {
@@ -105,6 +102,7 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onPlayerLeave(PlayerQuitEvent event) {
+        lastPvPDamage.remove(event.getPlayer().getUniqueId());
         if (gamePhase != GamePhase.NORMAL){
             if (event.getPlayer().getGameMode() == GameMode.SURVIVAL){
                 alivePlayers.remove(event.getPlayer());
@@ -114,6 +112,7 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onPlayerKicked(PlayerKickEvent event) {
+        lastPvPDamage.remove(event.getPlayer().getUniqueId());
         if (gamePhase != GamePhase.NORMAL){
             if (event.getPlayer().getGameMode() == GameMode.SURVIVAL){
                 alivePlayers.remove(event.getPlayer());
@@ -122,9 +121,61 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
     }
 
     @EventHandler
+    public void onPlayerAttackPlayer(EntityDamageByEntityEvent event) {
+        if (!(event.getEntity() instanceof Player victim)) return;
+
+        Player attacker = getPlayerAttacker(event.getDamager());
+        if (attacker == null) return;
+        if (attacker.equals(victim)) return;
+
+        lastPvPDamage.put(victim.getUniqueId(), System.currentTimeMillis());
+    }
+
+    private Player getPlayerAttacker(Entity damager) {
+        if (damager instanceof Player player) {
+            return player;
+        }
+
+        if (damager instanceof Projectile projectile) {
+            ProjectileSource shooter = projectile.getShooter();
+
+            if (shooter instanceof Player player) {
+                return player;
+            }
+        }
+
+        return null;
+    }
+
+    private boolean wasDamagedByPlayerRecently(Player player) {
+        Long lastDamageTime = lastPvPDamage.get(player.getUniqueId());
+
+        if (lastDamageTime == null) {
+            return false;
+        }
+
+        return System.currentTimeMillis() - lastDamageTime <= config.getLong("combat-tag-time");
+    }
+
+
+
+    @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
+        Player player = event.getEntity();
+
+        if (config.getBoolean("keep-inventory-management")) {
+            if (wasDamagedByPlayerRecently(player)) {
+                event.setKeepInventory(false);
+            }
+            else {
+                event.setKeepInventory(true);
+                event.getDrops().clear();
+            }
+        }
+
+        lastPvPDamage.remove(player.getUniqueId());
+
         if (gamePhase != GamePhase.NORMAL) {
-            Player player = event.getEntity();
 
             Location deathLocation = player.getLocation().clone();
 
@@ -504,4 +555,6 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
     public static MMBattlegrounds getInstance() {
         return instance;
     }
+
+
 }
