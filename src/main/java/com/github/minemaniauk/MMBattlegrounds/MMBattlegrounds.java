@@ -479,6 +479,7 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
         }
     }
 
+    @SuppressWarnings("deprecation")
     public void spreadNonOverworldPlayersInsideBorder() {
         World overworld = Bukkit.getWorld("world");
 
@@ -497,18 +498,25 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
 
         for (Player p : getServer().getOnlinePlayers()) {
             if (p.getWorld().getEnvironment() != World.Environment.NORMAL) {
-                String command = String.format(
-                        "execute as %s in minecraft:overworld run spreadplayers %.2f %.2f %.2f %.2f false @s",
-                        p.getName(),
-                        centerX,
-                        centerZ,
-                        minDistance,
-                        radius
-                );
+                if (p.getRespawnLocation() != null && p.getRespawnLocation().getWorld() == overworld) {
+                    Location respawnLocation = p.getRespawnLocation();
+                    p.teleport(respawnLocation);
+                    p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&7&l> &fYou have been teleported to your spawn the overworld for sudden death"));
+                }
+                else {
+                    String command = String.format(
+                            "execute as %s in minecraft:overworld run spreadplayers %.2f %.2f %.2f %.2f false @s",
+                            p.getName(),
+                            centerX,
+                            centerZ,
+                            minDistance,
+                            radius
+                    );
 
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
 
-                p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&7&l> &fYou have been randomly teleported to the overworld for sudden death"));
+                    p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&7&l> &fYou have been randomly teleported to the overworld for sudden death"));
+                }
             }
         }
     }

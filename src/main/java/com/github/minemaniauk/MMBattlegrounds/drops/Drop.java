@@ -27,6 +27,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class Drop {
@@ -261,9 +262,7 @@ public class Drop {
 
         List<ItemStack> contents = new ArrayList<>();
 
-        for (ItemStack item : inventory.getContents()) {
-            contents.add(item);
-        }
+        Collections.addAll(contents, inventory.getContents());
 
         config.set(path + ".size", inventory.getSize());
         config.set(path + ".contents", contents);
