@@ -1,6 +1,7 @@
 package com.github.minemaniauk.MMBattlegrounds;
 
 import com.booksaw.betterTeams.Team;
+import com.github.minemaniauk.MMBattlegrounds.commands.ResetAllBorders;
 import com.github.minemaniauk.MMBattlegrounds.commands.StartSuddenDeath;
 import com.github.minemaniauk.MMBattlegrounds.commands.drops.*;
 import com.github.minemaniauk.MMBattlegrounds.drops.DropManager;
@@ -40,7 +41,7 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
     public long suddenDeathScheduledStartTime; // The time at which sudden death is scheduled to start unix time
     public long suddenDeathStartTime; // The time at which sudden death actually started
     public long teamDisbandTime; // Remaining time in millis in sudden death for disband
-    public long suddenDeathLength; // Amount of millis which sudden death boarder should shrink over
+    public long suddenDeathLength; // Amount of millis which sudden death border should shrink over
     public GamePhase gamePhase;
     public List<Player> alivePlayers = new ArrayList<>(); // Used in sudden death
     private final Map<UUID, Long> lastPvPDamage = new HashMap<>();
@@ -81,6 +82,7 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
         getCommand("dropsetitems").setExecutor(new DropSetItems());
         getCommand("dropsetlocation").setExecutor(new DropSetLocation());
         getCommand("dropspawn").setExecutor(new DropSpawn());
+        getCommand("resetallborders").setExecutor(new ResetAllBorders());
     }
 
     @Override
@@ -419,7 +421,7 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
         long suddenDeathEndTime = suddenDeathStartTime + suddenDeathLength;
         long suddenDeathRemainingMillis = Math.max(0L, suddenDeathEndTime - System.currentTimeMillis());
 
-        double finalBorderSize = config.getDouble("boarder-size");
+        double finalBorderSize = config.getDouble("border-size");
 
         for (World world : Bukkit.getWorlds()) {
             WorldBorder border = world.getWorldBorder();
