@@ -23,9 +23,28 @@ commands:
     permission: "mmbattlegrounds.drop.set.location"
   dropspawn:
     permission: "mmbattlegrounds.drop.spawn"
+  resetallborders:
+    permission: "minecraft.command.worldborder"
 
 permissions:
   mmbattlegrounds.bypass.commanddisablement:
     description: Allows bypassing disabled command restrictions
     default: op
-
+  mmbattlegrounds.suddendeath.start:
+    description: Allows executing the sudden death start command
+    default: op
+  mmbattlegrounds.drop.create:
+    description: Allows creating a new drop entry
+    default: op
+  mmbattlegrounds.drop.remove:
+      description: Allows removing an existing drop entry
+      default: op
+  mmbattlegrounds.drop.set.items:
+    description: Allows setting the items in a drop entry
+    default: op
+  mmbattlegrounds.drop.set.location:
+    description: Allows setting the location of a drop entry
+    default: op
+  mmbattlegrounds.drop.spawn:
+    description: Allows spawning a drop entry into the world
+    default: op

@@ -4,11 +4,14 @@ sudden-death-start:
 # Remaining time in millis in sudden death for team disbanding
 sudden-death-team-disband-time: 900000
 
-# Amount of millis which sudden death boarder should shrink over
+# Amount of millis which sudden death border should shrink over
 sudden-death-length: 1800000
 
-# Final world boarder size
-boarder-size: 10
+# The default size of the worldborder
+default-border-size: 5000
+
+# Final world border size
+border-size: 10
 
 # Min amount of ticks which a drop takes to fall
 drop-mix-ticks: 4800

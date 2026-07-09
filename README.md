@@ -20,6 +20,8 @@ These are supply drops which can be activated by staff.
 | /dropsetitems     | Sets the selected drops contents (Uses a single chest which the executor is looking at) | mmbattlegrounds.drop.set.items    |
 | /dropsetlocation  | Sets the selected drops location to the executors current location                      | mmbattlegrounds.drop.set.location |
 | /dropspawn        | Spawns in the selected drop with its set location and contents                          | mmbattlegrounds.drop.spawn        |
+| /resetallborders  | Sets the world border in all worlds to the default config value or the given value      | minecraft.command.worldborder     |
+
 
 ## Config
 
@@ -30,11 +32,14 @@ sudden-death-start:
 # The amount of time remaining in millis in the sudden death length before teams are disbanded
 sudden-death-team-disband-time: 900000
 
-# Amount of time in millis which sudden death boarder should shrink over
+# Amount of time in millis which sudden death border should shrink over
 sudden-death-length: 1800000
 
-# Final world boarder size
-boarder-size: 10
+# The default size of the worldborder
+default-border-size: 5000
+
+# Final world border size
+border-size: 10
 
 # Min amount of ticks which a drop takes to fall
 drop-mix-ticks: 4800
