@@ -13,6 +13,12 @@ default-border-size: 5000
 # Final world border size
 border-size: 10
 
+# Show drop timetable link on join the server
+show-drop-timetable: false
+
+# The drop timetable link
+drop-timetable-link:
+
 # Min amount of ticks which a drop takes to fall
 drop-mix-ticks: 4800
 

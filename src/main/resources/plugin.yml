@@ -25,6 +25,7 @@ commands:
     permission: "mmbattlegrounds.drop.spawn"
   resetallborders:
     permission: "minecraft.command.worldborder"
+  droptimetable:
 
 permissions:
   mmbattlegrounds.bypass.commanddisablement:

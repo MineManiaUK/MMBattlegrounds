@@ -1,6 +1,7 @@
 package com.github.minemaniauk.MMBattlegrounds;
 
 import com.booksaw.betterTeams.Team;
+import com.github.minemaniauk.MMBattlegrounds.commands.DropTimeTable;
 import com.github.minemaniauk.MMBattlegrounds.commands.ResetAllBorders;
 import com.github.minemaniauk.MMBattlegrounds.commands.StartSuddenDeath;
 import com.github.minemaniauk.MMBattlegrounds.commands.drops.*;
@@ -83,6 +84,9 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
         getCommand("dropsetlocation").setExecutor(new DropSetLocation());
         getCommand("dropspawn").setExecutor(new DropSpawn());
         getCommand("resetallborders").setExecutor(new ResetAllBorders());
+        if (config.getBoolean("show-drop-timetable")) {
+            getCommand("droptimetable").setExecutor(new DropTimeTable());
+        }
     }
 
     @Override
@@ -93,6 +97,14 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         scoreboardManager.AddPlayerScoreBoard(event.getPlayer());
+
+        if (config.getBoolean("show-drop-timetable")){
+            String timeTableLink = config.getString("drop-timetable-link");
+            if (timeTableLink != null && !timeTableLink.isEmpty()) {
+                event.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('&', "&a&l> &a&lCheck the drop time table to know when valuable supply drops are: &f" + timeTableLink));
+            }
+        }
+
 
         if (gamePhase != GamePhase.NORMAL) {
             if (event.getPlayer().getGameMode() == GameMode.SURVIVAL) {
