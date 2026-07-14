@@ -45,7 +45,7 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
     public long suddenDeathLength; // Amount of millis which sudden death border should shrink over
     public GamePhase gamePhase;
     public List<Player> alivePlayers = new ArrayList<>(); // Used in sudden death
-    private final Map<UUID, Long> lastPvPDamage = new HashMap<>();
+    private final Map<UUID, Long> combatTags = new HashMap<>();
 
     @Override
     public void onEnable() {
@@ -59,13 +59,14 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
         suddenDeathScheduledStartTime = config.getLong("sudden-death-start");
         teamDisbandTime = config.getLong("sudden-death-team-disband-time");
         suddenDeathLength = config.getLong("sudden-death-length");
+        gamePhase = GamePhase.NORMAL;
 
-        String phaseName = data.getString("phase", GamePhase.NORMAL.name());
-        try {
-            gamePhase = GamePhase.valueOf(phaseName);
-        } catch (IllegalArgumentException exception) {
-            gamePhase = GamePhase.NORMAL;
-        }
+        Bukkit.getScheduler().runTaskTimer(
+                this,
+                this::cleanupExpiredCombatTags,
+                20L,
+                20L
+        );
 
         scoreboardManager = new ScoreboardManager();
         dropManager = new DropManager(this);
@@ -105,7 +106,6 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
             }
         }
 
-
         if (gamePhase != GamePhase.NORMAL) {
             if (event.getPlayer().getGameMode() == GameMode.SURVIVAL) {
                 alivePlayers.add(event.getPlayer());
@@ -116,7 +116,11 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onPlayerLeave(PlayerQuitEvent event) {
-        lastPvPDamage.remove(event.getPlayer().getUniqueId());
+        if (isTagged(event.getPlayer())) {
+            event.getPlayer().setHealth(0);
+        }
+
+        combatTags.remove(event.getPlayer().getUniqueId());
         if (gamePhase != GamePhase.NORMAL){
             if (event.getPlayer().getGameMode() == GameMode.SURVIVAL){
                 alivePlayers.remove(event.getPlayer());
@@ -126,7 +130,7 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onPlayerKicked(PlayerKickEvent event) {
-        lastPvPDamage.remove(event.getPlayer().getUniqueId());
+        combatTags.remove(event.getPlayer().getUniqueId());
         if (gamePhase != GamePhase.NORMAL){
             if (event.getPlayer().getGameMode() == GameMode.SURVIVAL){
                 alivePlayers.remove(event.getPlayer());
@@ -135,50 +139,11 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
     }
 
     @EventHandler
-    public void onPlayerAttackPlayer(EntityDamageByEntityEvent event) {
-        if (!(event.getEntity() instanceof Player victim)) return;
-
-        Player attacker = getPlayerAttacker(event.getDamager());
-        if (attacker == null) return;
-        if (attacker.equals(victim)) return;
-
-        lastPvPDamage.put(victim.getUniqueId(), System.currentTimeMillis());
-    }
-
-    private Player getPlayerAttacker(Entity damager) {
-        if (damager instanceof Player player) {
-            return player;
-        }
-
-        if (damager instanceof Projectile projectile) {
-            ProjectileSource shooter = projectile.getShooter();
-
-            if (shooter instanceof Player player) {
-                return player;
-            }
-        }
-
-        return null;
-    }
-
-    private boolean wasDamagedByPlayerRecently(Player player) {
-        Long lastDamageTime = lastPvPDamage.get(player.getUniqueId());
-
-        if (lastDamageTime == null) {
-            return false;
-        }
-
-        return System.currentTimeMillis() - lastDamageTime <= config.getLong("combat-tag-time");
-    }
-
-
-
-    @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
 
         if (config.getBoolean("keep-inventory-management")) {
-            if (wasDamagedByPlayerRecently(player)) {
+            if (isTagged(player)) {
                 event.setKeepInventory(false);
             }
             else {
@@ -187,7 +152,17 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
             }
         }
 
-        lastPvPDamage.remove(player.getUniqueId());
+        if (event.getEntity().getKiller() != null){
+            combatTags.remove(event.getEntity().getKiller().getUniqueId());
+            event.getEntity().getKiller().sendMessage(ChatColor.GREEN + "You are no longer in combat");
+        }
+
+        if (isTagged(player)) {
+            combatTags.remove(player.getUniqueId());
+            player.sendMessage(ChatColor.GREEN + "You are no longer in combat");
+        }
+
+
 
         if (gamePhase != GamePhase.NORMAL) {
 
@@ -251,6 +226,91 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
                 spawnFireworksForSeconds(winningPlayer, 5);
             }
         }
+    }
+
+    @EventHandler
+    public void onPlayerTeleport(PlayerTeleportEvent event) {
+        PlayerTeleportEvent.TeleportCause cause = event.getCause();
+        if (cause == PlayerTeleportEvent.TeleportCause.PLUGIN || cause == PlayerTeleportEvent.TeleportCause.COMMAND) {
+            event.getPlayer().sendMessage(ChatColor.RED + "You can not do this while in combat");
+            event.setCancelled(true);
+        }
+    }
+
+    private void tag(Player player) {
+        boolean wasTagged = isTagged(player);
+
+        combatTags.put(
+                player.getUniqueId(),
+                System.currentTimeMillis() + config.getLong("combat-tag-time")
+        );
+
+        if (!wasTagged) {
+            player.sendMessage(
+                    ChatColor.RED + "You are now in combat for 15 seconds. DO NOT LOG OUT"
+            );
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerAttackPlayer(EntityDamageByEntityEvent event) {
+        if (!(event.getEntity() instanceof Player victim)) return;
+
+        Player attacker = getPlayerAttacker(event.getDamager());
+        if (attacker == null) return;
+        if (attacker.equals(victim)) return;
+
+        tag(attacker);
+        tag(victim);
+    }
+
+    private Player getPlayerAttacker(Entity damager) {
+        if (damager instanceof Player player) {
+            return player;
+        }
+
+        if (damager instanceof Projectile projectile) {
+            ProjectileSource shooter = projectile.getShooter();
+
+            if (shooter instanceof Player player) {
+                return player;
+            }
+        }
+
+        return null;
+    }
+
+    private boolean isTagged(Player player) {
+        Long expiry = combatTags.get(player.getUniqueId());
+
+        if (expiry == null) {
+            return false;
+        }
+
+        if (expiry <= System.currentTimeMillis()) {
+            combatTags.remove(player.getUniqueId());
+            return false;
+        }
+
+        return true;
+    }
+
+    private void cleanupExpiredCombatTags() {
+        long now = System.currentTimeMillis();
+
+        combatTags.entrySet().removeIf(entry -> {
+            if (entry.getValue() > now) {
+                return false;
+            }
+
+            Player player = Bukkit.getPlayer(entry.getKey());
+
+            if (player != null && player.isOnline()) {
+                player.sendMessage(ChatColor.GREEN + "You are no longer in combat");
+            }
+
+            return true;
+        });
     }
 
     public void spawnFireworksForSeconds(Player player, int seconds) {
