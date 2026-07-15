@@ -230,6 +230,8 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onPlayerTeleport(PlayerTeleportEvent event) {
+        if (!isTagged(event.getPlayer())) return;
+
         PlayerTeleportEvent.TeleportCause cause = event.getCause();
         if (cause == PlayerTeleportEvent.TeleportCause.PLUGIN || cause == PlayerTeleportEvent.TeleportCause.COMMAND) {
             event.getPlayer().sendMessage(ChatColor.RED + "You can not do this while in combat");
