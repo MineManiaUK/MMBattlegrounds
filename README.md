@@ -2,6 +2,10 @@
 
 MMBattlegrounds is the plugin used in the server internally known as batt2 it is NOT a plugin used on the battlegrounds smp
 
+> **Versioning**
+> 
+> The first number represents the season, the second represents major changes, and the third represents minor changes or patches.
+> 
 ### Sudden death
 
 Sudden death occurs before a server reset and functions like a battle royale last player standing is crowned the winner of that season
