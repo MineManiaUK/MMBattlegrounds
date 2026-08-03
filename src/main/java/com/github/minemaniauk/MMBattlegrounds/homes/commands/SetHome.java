@@ -4,6 +4,7 @@ import com.github.minemaniauk.MMBattlegrounds.MMBattlegrounds;
 import com.github.minemaniauk.MMBattlegrounds.homes.Home;
 import com.github.minemaniauk.MMBattlegrounds.homes.HomeData;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
@@ -24,6 +25,11 @@ public class SetHome implements TabExecutor {
 
             HomeData data = HomeData.load(p);
             String name = args[0];
+
+            if (p.getLocation().clone().subtract(0, 1, 0).getBlock().getType() == Material.AIR) {
+                p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&c&l> &cYou can not create a home without a block below you"));
+                return true;
+            }
 
             if (data.getHome(name) != null) {
                 Home oldHome = data.getHome(name);
