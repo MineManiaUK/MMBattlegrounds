@@ -11,21 +11,41 @@ softDepend:
 commands:
   startsuddendeath:
     permission: "mmbattlegrounds.suddendeath.start"
+
   dropcreate:
     permission: "mmbattlegrounds.drop.create"
+
   dropremove:
     permission: "mmbattlegrounds.drop.remove"
+
   dropselect:
     permission: "mmbattlegrounds.drop.select"
+
   dropsetitems:
     permission: "mmbattlegrounds.drop.set.items"
+
   dropsetlocation:
     permission: "mmbattlegrounds.drop.set.location"
+
   dropspawn:
     permission: "mmbattlegrounds.drop.spawn"
+
   resetallborders:
     permission: "minecraft.command.worldborder"
+
   droptimetable:
+
+  sethome:
+
+  home:
+
+  homes:
+
+  delhome:
+
+  homeadmin:
+    permission: "mmbattlegrounds.homes.admin"
+
 
 permissions:
   mmbattlegrounds.bypass.commanddisablement:
@@ -48,4 +68,13 @@ permissions:
     default: op
   mmbattlegrounds.drop.spawn:
     description: Allows spawning a drop entry into the world
+    default: op
+  mmbattlegrounds.homes.unlimited:
+    description: Allows bypassing the limit of set homes
+    default: op
+  mmbattlegrounds.homes.admin:
+    description: Allows admins to manage online players' homes
+    default: op
+  mmbattlegrounds.bypass.teleportdelay:
+    description: Allow bypassing teleport delay
     default: op

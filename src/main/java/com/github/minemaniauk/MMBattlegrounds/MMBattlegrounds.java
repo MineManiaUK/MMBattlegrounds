@@ -6,6 +6,11 @@ import com.github.minemaniauk.MMBattlegrounds.commands.ResetAllBorders;
 import com.github.minemaniauk.MMBattlegrounds.commands.StartSuddenDeath;
 import com.github.minemaniauk.MMBattlegrounds.commands.drops.*;
 import com.github.minemaniauk.MMBattlegrounds.drops.DropManager;
+import com.github.minemaniauk.MMBattlegrounds.homes.commands.DelHome;
+import com.github.minemaniauk.MMBattlegrounds.homes.commands.HomeAdmin;
+import com.github.minemaniauk.MMBattlegrounds.homes.commands.HomeCommand;
+import com.github.minemaniauk.MMBattlegrounds.homes.commands.Homes;
+import com.github.minemaniauk.MMBattlegrounds.homes.commands.SetHome;
 import org.bukkit.*;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -73,6 +78,7 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
 
         Bukkit.getScheduler().runTaskTimer(this, this::update, 0L, 20L);
         getServer().getPluginManager().registerEvents(this, this);
+        TeleportHelper.register(this);
         getCommand("startsuddendeath").setExecutor(new StartSuddenDeath());
         getCommand("dropcreate").setExecutor(new DropCreate());
         DropRemove dropRemove = new DropRemove();
@@ -85,6 +91,21 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
         getCommand("dropsetlocation").setExecutor(new DropSetLocation());
         getCommand("dropspawn").setExecutor(new DropSpawn());
         getCommand("resetallborders").setExecutor(new ResetAllBorders());
+        DelHome delHome = new DelHome();
+        HomeAdmin homeAdmin = new HomeAdmin();
+        SetHome sethome = new SetHome();
+        HomeCommand homeCommand = new HomeCommand();
+        getCommand("homeadmin").setExecutor(homeAdmin);
+        getCommand("homeadmin").setTabCompleter(homeAdmin);
+        getCommand("delhome").setExecutor(delHome);
+        getCommand("delhome").setTabCompleter(delHome);
+        getCommand("sethome").setExecutor(sethome);
+        getCommand("sethome").setTabCompleter(sethome);
+        getCommand("home").setExecutor(homeCommand);
+        getCommand("home").setTabCompleter(homeCommand);
+        getCommand("homes").setExecutor(new Homes());
+
+
         if (config.getBoolean("show-drop-timetable")) {
             getCommand("droptimetable").setExecutor(new DropTimeTable());
         }

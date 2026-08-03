@@ -19,7 +19,6 @@ public class DropTimeTable implements CommandExecutor {
             }
         }
 
-
         return true;
     }
 }
