@@ -90,7 +90,7 @@ public final class TeleportHelper implements Listener {
         if (to == null) {
             return;
         }
-        
+
         boolean moved = from.getWorld() != to.getWorld()
                 || from.distanceSquared(to) > 0.25;
 

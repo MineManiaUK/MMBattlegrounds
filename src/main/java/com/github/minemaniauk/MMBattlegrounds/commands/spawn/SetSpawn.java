@@ -1,6 +1,7 @@
 package com.github.minemaniauk.MMBattlegrounds.commands.spawn;
 
 import com.github.minemaniauk.MMBattlegrounds.MMBattlegrounds;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -16,7 +17,7 @@ public class SetSpawn implements CommandExecutor {
                 Location location = p.getLocation();
 
                 MMBattlegrounds.getInstance().getData().set("spawn-location", location);
-                p.sendMessage("&7&l> &7Set spawn");
+                p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&7&l> &7Set spawn"));
                 return true;
             }
             sender.sendMessage("Only players can run this command");
