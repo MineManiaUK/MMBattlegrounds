@@ -231,6 +231,10 @@ public class DropManager {
 
         activeDrops.put(key, activeArc);
         activeArc.future().whenComplete((location, throwable) -> activeDrops.remove(key, activeArc));
+        getPlugin().getRestictionManager().enableKeepInventoryForDuration(
+                getPlugin().getRestictionManager().getDropKeepInventoryDurationTicks()
+        );
+        getPlugin().getRestictionManager().enableMovementForceDisable();
         return SpawnResult.STARTED;
     }
 
@@ -244,6 +248,11 @@ public class DropManager {
 
         if (activeArc == null || !activeArc.cancel()) {
             return CancelResult.NOT_ACTIVE;
+        }
+
+        if (activeDrops.isEmpty()) {
+            getPlugin().getRestictionManager().disableKeepInventoryForceEnable();
+            getPlugin().getRestictionManager().disableMovementForceDisable();
         }
 
         notifyDropCancelled(name);

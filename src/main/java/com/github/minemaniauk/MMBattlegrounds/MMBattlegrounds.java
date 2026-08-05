@@ -43,6 +43,7 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
     private static MMBattlegrounds instance;
     private ScoreboardManager scoreboardManager;
     private DropManager dropManager;
+    private RestrictionManager restictionManager;
     private FileConfiguration config;
     private File configFile;
     private FileConfiguration data;
@@ -78,9 +79,11 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
 
         scoreboardManager = new ScoreboardManager();
         dropManager = new DropManager(this);
+        restictionManager = new RestrictionManager(this);
 
         Bukkit.getScheduler().runTaskTimer(this, this::update, 0L, 20L);
         getServer().getPluginManager().registerEvents(this, this);
+        getServer().getPluginManager().registerEvents(restictionManager, this);
         TeleportHelper.register(this);
         getCommand("startsuddendeath").setExecutor(new StartSuddenDeath());
         getCommand("dropcreate").setExecutor(new DropCreate());
@@ -122,7 +125,9 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
-        // Plugin shutdown logic
+        if (restictionManager != null) {
+            restictionManager.disableKeepInventoryForceEnableSilently();
+        }
     }
 
     @EventHandler
@@ -178,16 +183,6 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
-
-        if (config.getBoolean("keep-inventory-management")) {
-            if (isTagged(player)) {
-                event.setKeepInventory(false);
-            }
-            else {
-                event.setKeepInventory(true);
-                event.getDrops().clear();
-            }
-        }
 
         if (event.getEntity().getKiller() != null){
             combatTags.remove(event.getEntity().getKiller().getUniqueId());
@@ -663,6 +658,10 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
 
     public DropManager getDropManager() {
         return this.dropManager;
+    }
+
+    public RestrictionManager getRestictionManager() {
+        return this.restictionManager;
     }
 
     public FileConfiguration getData() {
