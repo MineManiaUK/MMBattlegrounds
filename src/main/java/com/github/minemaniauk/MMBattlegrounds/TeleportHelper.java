@@ -90,12 +90,9 @@ public final class TeleportHelper implements Listener {
         if (to == null) {
             return;
         }
-
-        // Ignore head rotation; cancel only when X, Y, or Z changes.
-        boolean moved =
-                from.getX() != to.getX()
-                        || from.getY() != to.getY()
-                        || from.getZ() != to.getZ();
+        
+        boolean moved = from.getWorld() != to.getWorld()
+                || from.distanceSquared(to) > 0.25;
 
         if (!moved) {
             return;
