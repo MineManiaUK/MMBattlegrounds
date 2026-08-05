@@ -14,6 +14,8 @@ import com.github.minemaniauk.MMBattlegrounds.homes.commands.HomeCommand;
 import com.github.minemaniauk.MMBattlegrounds.homes.commands.Homes;
 import com.github.minemaniauk.MMBattlegrounds.homes.commands.SetHome;
 import org.bukkit.*;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.*;
@@ -36,6 +38,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 public final class MMBattlegrounds extends JavaPlugin implements Listener {
@@ -141,6 +144,10 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
             }
         }
 
+        if (!event.getPlayer().hasPlayedBefore()) {
+            onPlayerSpawn(event.getPlayer());
+        }
+
         if (gamePhase != GamePhase.NORMAL) {
             if (event.getPlayer().getGameMode() == GameMode.SURVIVAL) {
                 alivePlayers.add(event.getPlayer());
@@ -178,6 +185,79 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
                 alivePlayers.remove(event.getPlayer());
             }
         }
+    }
+
+    @EventHandler
+    public void PlayerRespawnEvent(PlayerRespawnEvent event) {
+        onPlayerSpawn(event.getPlayer());
+    }
+
+    private void onPlayerSpawn(Player player) {
+        if (player.getGameMode() != GameMode.SURVIVAL) {
+            return;
+        }
+
+        World world = Bukkit.getWorld("world");
+        if (world == null) {
+            return;
+        }
+
+        teleportToSafeSpawn(player, world);
+    }
+
+    private void teleportToSafeSpawn(Player player, World world) {
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        Location center = world.getSpawnLocation();
+
+        for (int i = 0; i < 100; i++) {
+            int x = center.getBlockX() + random.nextInt(-250, 251);
+            int z = center.getBlockZ() + random.nextInt(-250, 251);
+            int y = world.getHighestBlockYAt(x, z) + 1;
+
+            Location spawnLocation = new Location(world, x + 0.5, y, z + 0.5);
+
+            if (isSafeSpawn(spawnLocation)) {
+                Bukkit.getScheduler().runTask(this, () -> player.teleport(spawnLocation));
+                return;
+            }
+        }
+
+        Bukkit.getScheduler().runTaskLater(this, () -> teleportToSafeSpawn(player, world), 1L);
+    }
+
+    private boolean isSafeSpawn(Location location) {
+        Block feet = location.getBlock();
+        Block head = feet.getRelative(BlockFace.UP);
+        Block ground = feet.getRelative(BlockFace.DOWN);
+
+        Material groundType = ground.getType();
+
+        if (feet.isLiquid() || head.isLiquid()) {
+            return false;
+        }
+
+        if (feet.getType().isSolid() || head.getType().isSolid()) {
+            return false;
+        }
+
+        if (!groundType.isSolid()) {
+            return false;
+        }
+
+        if (groundType == Material.WATER || groundType == Material.LAVA) {
+            return false;
+        }
+
+        if (Tag.LEAVES.isTagged(groundType)) {
+            return false;
+        }
+
+        return groundType != Material.CACTUS
+                && groundType != Material.MAGMA_BLOCK
+                && groundType != Material.CAMPFIRE
+                && groundType != Material.SOUL_CAMPFIRE
+                && groundType != Material.FIRE
+                && groundType != Material.SOUL_FIRE;
     }
 
     @EventHandler
