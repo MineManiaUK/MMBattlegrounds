@@ -46,6 +46,11 @@ commands:
   homeadmin:
     permission: "mmbattlegrounds.homes.admin"
 
+  spawn:
+
+  setspawn:
+    permission: "mmbattlegrounds.setspawn"
+
 
 permissions:
   mmbattlegrounds.bypass.commanddisablement:
@@ -77,4 +82,7 @@ permissions:
     default: op
   mmbattlegrounds.bypass.teleportdelay:
     description: Allow bypassing teleport delay
+    default: op
+  mmbattlegrounds.setspawn:
+    description: Allow setting the spawn location
     default: op

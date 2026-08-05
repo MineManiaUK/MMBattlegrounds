@@ -39,6 +39,9 @@ sudden-death-team-disband-time: 900000
 # Amount of time in millis which sudden death border should shrink over
 sudden-death-length: 1800000
 
+# Is spawn command enabled  
+spawn-enabled: true
+
 # The default size of the worldborder
 default-border-size: 5000
 

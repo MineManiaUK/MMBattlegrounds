@@ -35,8 +35,14 @@ public final class TeleportHelper implements Listener {
             return;
         }
 
+        if (MMBattlegrounds.getInstance().isTagged(player)) {
+            sendMessage(player, "&c&l> &cYou are in combat");
+            return;
+        }
+
         if (location.clone().subtract(0, 1, 0).getBlock().getType() == Material.AIR) {
-            sendMessage(player, "&c&lWARNING> &cThe destination is likely unsafe. &c&lMove now to cancel the teleport");
+            location.setY(location.getWorld().getHighestBlockYAt(location.getBlockX(), location.getBlockZ()) + 1);
+            sendMessage(player, "&c&lWARNING> &cThe destination could be unsafe. &c&lMove now to cancel the teleport");
         }
 
         if (skipCooldown || player.hasPermission("mmbattlegrounds.bypass.teleportdelay")) {

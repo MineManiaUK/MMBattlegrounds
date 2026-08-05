@@ -5,6 +5,8 @@ import com.github.minemaniauk.MMBattlegrounds.commands.DropTimeTable;
 import com.github.minemaniauk.MMBattlegrounds.commands.ResetAllBorders;
 import com.github.minemaniauk.MMBattlegrounds.commands.StartSuddenDeath;
 import com.github.minemaniauk.MMBattlegrounds.commands.drops.*;
+import com.github.minemaniauk.MMBattlegrounds.commands.spawn.SetSpawn;
+import com.github.minemaniauk.MMBattlegrounds.commands.spawn.SpawnCommand;
 import com.github.minemaniauk.MMBattlegrounds.drops.DropManager;
 import com.github.minemaniauk.MMBattlegrounds.homes.commands.DelHome;
 import com.github.minemaniauk.MMBattlegrounds.homes.commands.HomeAdmin;
@@ -104,6 +106,11 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
         getCommand("home").setExecutor(homeCommand);
         getCommand("home").setTabCompleter(homeCommand);
         getCommand("homes").setExecutor(new Homes());
+
+        if (config.getBoolean("spawn-enabled")) {
+            getCommand("spawn").setExecutor(new SpawnCommand());
+            getCommand("setspawn").setExecutor(new SetSpawn());
+        }
 
 
         if (config.getBoolean("show-drop-timetable")) {
@@ -303,7 +310,7 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
         return null;
     }
 
-    private boolean isTagged(Player player) {
+    public boolean isTagged(Player player) {
         Long expiry = combatTags.get(player.getUniqueId());
 
         if (expiry == null) {

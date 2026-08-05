@@ -29,7 +29,7 @@ public class HomeCommand implements TabExecutor {
                 return true;
             }
 
-            home.teleport(p);
+            home.teleport();
             return true;
         }
         sender.sendMessage("Only players can run this command");
