@@ -92,6 +92,7 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
         getCommand("dropsetitems").setExecutor(new DropSetItems());
         getCommand("dropsetlocation").setExecutor(new DropSetLocation());
         getCommand("dropspawn").setExecutor(new DropSpawn());
+        getCommand("dropcancel").setExecutor(new DropCancel());
         getCommand("resetallborders").setExecutor(new ResetAllBorders());
         DelHome delHome = new DelHome();
         HomeAdmin homeAdmin = new HomeAdmin();

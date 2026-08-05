@@ -30,6 +30,9 @@ commands:
   dropspawn:
     permission: "mmbattlegrounds.drop.spawn"
 
+  dropcancel:
+    permission: "mmbattlegrounds.drop.cancel"
+
   resetallborders:
     permission: "minecraft.command.worldborder"
 
@@ -73,6 +76,9 @@ permissions:
     default: op
   mmbattlegrounds.drop.spawn:
     description: Allows spawning a drop entry into the world
+    default: op
+  mmbattlegrounds.drop.cancel:
+    description: Allows cancelling an inbound drop entry
     default: op
   mmbattlegrounds.homes.unlimited:
     description: Allows bypassing the limit of set homes

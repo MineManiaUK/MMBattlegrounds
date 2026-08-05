@@ -24,6 +24,7 @@ These are supply drops which can be activated by staff.
 | /dropsetitems     | Sets the selected drops contents (Uses a single chest which the executor is looking at) | mmbattlegrounds.drop.set.items    |
 | /dropsetlocation  | Sets the selected drops location to the executors current location                      | mmbattlegrounds.drop.set.location |
 | /dropspawn        | Spawns in the selected drop with its set location and contents                          | mmbattlegrounds.drop.spawn        |
+| /dropcancel       | Cancels the selected drop if it is currently inbound                                   | mmbattlegrounds.drop.cancel       |
 | /resetallborders  | Sets the world border in all worlds to the default config value or the given value      | minecraft.command.worldborder     |
 
 

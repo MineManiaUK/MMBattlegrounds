@@ -1,6 +1,8 @@
 package com.github.minemaniauk.MMBattlegrounds.drops;
 
 import com.github.minemaniauk.MMBattlegrounds.MMBattlegrounds;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -9,12 +11,28 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 public class DropManager {
+
+    public enum SpawnResult {
+        STARTED,
+        NO_SELECTION,
+        ALREADY_ACTIVE,
+        INVALID_DROP
+    }
+
+    public enum CancelResult {
+        CANCELLED,
+        NO_SELECTION,
+        NOT_ACTIVE
+    }
 
     private final JavaPlugin plugin;
     public final DropParticleManager particleManager;
     public HashMap<Player, Drop> selectedDrop = new HashMap<>();
+    private final Map<String, DropParticleManager.ActiveArc> activeDrops = new HashMap<>();
 
     public DropManager(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -66,6 +84,7 @@ public class DropManager {
             return false;
         }
 
+        cancel(name);
         section.set(name, null);
         getPlugin().saveData();
 
@@ -111,6 +130,84 @@ public class DropManager {
 
     public Drop getSelectedDrop(Player player) {
         return selectedDrop.get(player);
+    }
+
+    public SpawnResult spawnSelectedDrop(Player player) {
+        Drop drop = getSelectedDrop(player);
+
+        if (drop == null) {
+            return SpawnResult.NO_SELECTION;
+        }
+
+        return spawn(drop);
+    }
+
+    public CancelResult cancelSelectedDrop(Player player) {
+        Drop drop = getSelectedDrop(player);
+
+        if (drop == null) {
+            return CancelResult.NO_SELECTION;
+        }
+
+        return cancel(drop.name);
+    }
+
+    public SpawnResult spawn(Drop drop) {
+        if (drop == null) {
+            return SpawnResult.NO_SELECTION;
+        }
+
+        String key = activeDropKey(drop.name);
+
+        if (activeDrops.containsKey(key)) {
+            return SpawnResult.ALREADY_ACTIVE;
+        }
+
+        DropParticleManager.ActiveArc activeArc = drop.spawn(plugin);
+
+        if (activeArc == null) {
+            return SpawnResult.INVALID_DROP;
+        }
+
+        activeDrops.put(key, activeArc);
+        activeArc.future().whenComplete((location, throwable) -> activeDrops.remove(key, activeArc));
+        return SpawnResult.STARTED;
+    }
+
+    public CancelResult cancel(String name) {
+        if (name == null || name.isBlank()) {
+            return CancelResult.NOT_ACTIVE;
+        }
+
+        String key = activeDropKey(name);
+        DropParticleManager.ActiveArc activeArc = activeDrops.remove(key);
+
+        if (activeArc == null || !activeArc.cancel()) {
+            return CancelResult.NOT_ACTIVE;
+        }
+
+        notifyDropCancelled(name);
+        return CancelResult.CANCELLED;
+    }
+
+    private void notifyDropCancelled(String name) {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            player.sendTitle(
+                    ChatColor.RED + "DROP CANCELLED",
+                    ChatColor.YELLOW + "The drop was called off",
+                    10,
+                    50,
+                    20
+            );
+            player.sendMessage(ChatColor.translateAlternateColorCodes(
+                    '&',
+                    "&7&l> &cThe supply drop &f" + name + " &cwas cancelled"
+            ));
+        }
+    }
+
+    private String activeDropKey(String name) {
+        return name.toLowerCase(Locale.ROOT);
     }
 
     private ConfigurationSection getDropsSection() {
