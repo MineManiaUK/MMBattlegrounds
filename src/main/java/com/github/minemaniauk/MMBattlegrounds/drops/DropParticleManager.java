@@ -114,10 +114,10 @@ public class DropParticleManager {
         double angle = random.nextDouble(0, Math.PI * 2);
 
         // Far enough away for a 2–3 minute 
-        double distance = random.nextDouble(90, 120);
+        double distance = random.nextDouble(600, 1000);
 
         // Height above the target
-        double height = random.nextDouble(120, 220);
+        double height = random.nextDouble(600, 1000);
 
         double x = Math.cos(angle) * distance;
         double z = Math.sin(angle) * distance;

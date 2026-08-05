@@ -94,6 +94,23 @@ public class Drop {
                 + countItems(copy) + " item stacks.");
     }
 
+    public Inventory createEditorInventory() {
+        Inventory sourceInventory = inventory;
+
+        if (sourceInventory == null) {
+            sourceInventory = Bukkit.createInventory(null, 27, name + " Supply Drop");
+        }
+
+        Inventory editor = Bukkit.createInventory(
+                null,
+                sourceInventory.getSize(),
+                name + " Supply Drop"
+        );
+
+        copyInventory(sourceInventory, editor);
+        return editor;
+    }
+
     public static int countItems(Inventory inventory) {
         if (inventory == null) return 0;
 

@@ -18,11 +18,11 @@ public class DropCancel implements CommandExecutor {
             switch (manager.cancelSelectedDrop(player)) {
                 case NO_SELECTION -> sender.sendMessage(ChatColor.translateAlternateColorCodes(
                         '&',
-                        "&a&l> &cA drop is not selected"
+                        "&c&l> &cA drop is not selected"
                 ));
                 case NOT_ACTIVE -> sender.sendMessage(ChatColor.translateAlternateColorCodes(
                         '&',
-                        "&a&l> &cThat drop is not currently inbound"
+                        "&c&l> &cThat drop is not currently active"
                 ));
                 case CANCELLED -> sender.sendMessage(ChatColor.translateAlternateColorCodes(
                         '&',

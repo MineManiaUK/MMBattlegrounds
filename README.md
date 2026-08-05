@@ -21,7 +21,7 @@ These are supply drops which can be activated by staff.
 | /dropcreate       | Create a drop                                                                           | mmbattlegrounds.drop.create       |
 | /dropremove       | Delete a drop                                                                           | mmbattlegrounds.drop.remove       |
 | /dropselect       | Select a drop to edit/spawn                                                             | mmbattlegrounds.drop.select       |
-| /dropsetitems     | Sets the selected drops contents (Uses a single chest which the executor is looking at) | mmbattlegrounds.drop.set.items    |
+| /dropsetitems     | Opens an inventory editor for the selected drop contents                                 | mmbattlegrounds.drop.set.items    |
 | /dropsetlocation  | Sets the selected drops location to the executors current location                      | mmbattlegrounds.drop.set.location |
 | /dropspawn        | Spawns in the selected drop with its set location and contents                          | mmbattlegrounds.drop.spawn        |
 | /dropcancel       | Cancels the selected drop if it is currently inbound                                   | mmbattlegrounds.drop.cancel       |

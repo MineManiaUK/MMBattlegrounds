@@ -21,6 +21,11 @@ public class DropSelect implements TabExecutor {
 
             String name = args[0];
 
+            if (name.isEmpty()) {
+                sender.sendMessage("Usage: /dropselect <name>");
+                return true;
+            }
+
             DropManager manager = MMBattlegrounds.getInstance().getDropManager();
             List<String> dropNames = new ArrayList<>();
             for (Drop drop : manager.getExisting()) {

@@ -18,15 +18,15 @@ public class DropSpawn implements CommandExecutor {
             switch (manager.spawnSelectedDrop(player)) {
                 case NO_SELECTION -> sender.sendMessage(ChatColor.translateAlternateColorCodes(
                         '&',
-                        "&a&l> &cA drop is not selected"
+                        "&c&l> &cA drop is not selected"
                 ));
                 case ALREADY_ACTIVE -> sender.sendMessage(ChatColor.translateAlternateColorCodes(
                         '&',
-                        "&a&l> &cThat drop is already inbound"
+                        "&c&l> &cThat drop is already inbound"
                 ));
                 case INVALID_DROP -> sender.sendMessage(ChatColor.translateAlternateColorCodes(
                         '&',
-                        "&a&l> &cThe selected drop could not be spawned"
+                        "&c&l> &cThe selected drop could not be spawned"
                 ));
                 case STARTED -> sender.sendMessage(ChatColor.translateAlternateColorCodes(
                         '&',
