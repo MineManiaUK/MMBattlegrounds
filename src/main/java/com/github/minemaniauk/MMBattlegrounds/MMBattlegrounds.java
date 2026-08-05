@@ -126,7 +126,7 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
     @Override
     public void onDisable() {
         if (restictionManager != null) {
-            restictionManager.disableKeepInventoryForceEnableSilently();
+            restictionManager.disableAllSilently();
         }
     }
 
@@ -426,24 +426,6 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
             if (event.getCause() == PlayerPortalEvent.TeleportCause.NETHER_PORTAL || event.getCause() == PlayerTeleportEvent.TeleportCause.END_PORTAL) {
                 event.setCancelled(true);
                 event.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('&', "&c&l> &cportals are disabled in sudden death."));
-            }
-        }
-    }
-
-    @EventHandler
-    public void onEntityExplosion(EntityExplodeEvent event) {
-        if (event.getEntity().getType() == EntityType.END_CRYSTAL) {
-            if (!config.getBoolean("end-crystals")) {
-                event.setCancelled(true);
-            }
-        }
-    }
-
-    @EventHandler
-    public void onBlockExplosion(BlockExplodeEvent event) {
-        if (event.getExplodedBlockState().getType() == Material.RESPAWN_ANCHOR){
-            if (!config.getBoolean("respawn-anchors")) {
-                event.setCancelled(true);
             }
         }
     }

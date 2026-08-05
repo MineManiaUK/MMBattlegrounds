@@ -3,9 +3,13 @@ package com.github.minemaniauk.MMBattlegrounds;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockExplodeEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityToggleGlideEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -14,6 +18,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 
 public class RestrictionManager implements Listener {
+
+    private static final long DEFAULT_DROP_KEEP_INVENTORY_DURATION_TICKS = 20L * 60L * 10L;
+    private static final long DEFAULT_KEEP_INVENTORY_WARNING_TICKS = 20L * 60L;
 
     private final MMBattlegrounds plugin;
     private boolean keepInventoryForceEnable;
@@ -70,7 +77,7 @@ public class RestrictionManager implements Listener {
         ));
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerDeath(PlayerDeathEvent event) {
         if (!isKeepInventoryManagementEnabled()) {
             return;
@@ -123,6 +130,22 @@ public class RestrictionManager implements Listener {
         disableRiptideForceDisable();
     }
 
+    public boolean enableAll() {
+        boolean keepInventoryChanged = enableKeepInventoryForce();
+        boolean movementChanged = !isElytraForceDisabled() || !isRiptideForceDisabled();
+
+        enableMovementForceDisable();
+        return keepInventoryChanged || movementChanged;
+    }
+
+    public boolean enableAllSilently() {
+        boolean keepInventoryChanged = enableKeepInventoryForceSilently();
+        boolean movementChanged = !isElytraForceDisabled() || !isRiptideForceDisabled();
+
+        enableMovementForceDisable();
+        return keepInventoryChanged || movementChanged;
+    }
+
     public boolean isKeepInventoryForceEnabled() {
         return keepInventoryForceEnable;
     }
@@ -131,7 +154,8 @@ public class RestrictionManager implements Listener {
         return Math.max(
                 0L,
                 plugin.getConfiguration().getLong(
-                        "drop-keep-inventory-force-duration-ticks"
+                        "drop-keep-inventory-force-duration-ticks",
+                        DEFAULT_DROP_KEEP_INVENTORY_DURATION_TICKS
                 )
         );
     }
@@ -144,7 +168,9 @@ public class RestrictionManager implements Listener {
         }
 
         cancelScheduledKeepInventoryTasks();
-        return setKeepInventoryForceEnabled(true, true);
+        boolean stateChanged = setKeepInventoryForceEnabled(true, true);
+        broadcastKeepInventoryManualEnable();
+        return stateChanged;
     }
 
     public boolean enableKeepInventoryForceSilently() {
@@ -158,31 +184,48 @@ public class RestrictionManager implements Listener {
         return setKeepInventoryForceEnabled(true, false);
     }
 
-    public boolean enableKeepInventoryForDuration(long durationTicks) {
+    public boolean enableAllForDuration(long durationTicks) {
+        if (durationTicks <= 0L) {
+            disableAll();
+            return false;
+        }
+
+        boolean movementChanged = !isElytraForceDisabled() || !isRiptideForceDisabled();
+        enableMovementForceDisable();
+
         if (!isKeepInventoryManagementEnabled()) {
             cancelScheduledKeepInventoryTasks();
             keepInventoryForceEnable = false;
-            return false;
+            keepInventoryForceResetTask = plugin.getServer().getScheduler().runTaskLater(
+                    plugin,
+                    this::disableAll,
+                    durationTicks
+            );
+            return movementChanged;
         }
 
-        if (durationTicks <= 0L) {
-            disableKeepInventoryForceEnable();
-            return false;
-        }
+        boolean keepInventoryChanged = enableKeepInventoryForDuration(durationTicks, this::disableAll);
+        return keepInventoryChanged || movementChanged;
+    }
 
-        boolean stateChanged = setKeepInventoryForceEnabled(true, true);
+    public boolean disableAll() {
+        boolean keepInventoryChanged = disableKeepInventoryForceEnable();
+        boolean movementChanged = isElytraForceDisabled() || isRiptideForceDisabled();
 
-        cancelScheduledKeepInventoryTasks();
-        broadcastKeepInventoryDuration(durationTicks);
-        scheduleUpcomingDisableAlert(durationTicks);
+        disableMovementForceDisable();
+        return keepInventoryChanged || movementChanged;
+    }
 
-        keepInventoryForceResetTask = plugin.getServer().getScheduler().runTaskLater(
-                plugin,
-                () -> disableKeepInventoryForceEnable(),
-                durationTicks
-        );
+    public boolean disableAllSilently() {
+        boolean keepInventoryChanged = disableKeepInventoryForceEnableSilently();
+        boolean movementChanged = isElytraForceDisabled() || isRiptideForceDisabled();
 
-        return stateChanged;
+        disableMovementForceDisable();
+        return keepInventoryChanged || movementChanged;
+    }
+
+    public boolean enableKeepInventoryForDuration(long durationTicks) {
+        return enableKeepInventoryForDuration(durationTicks, this::disableKeepInventoryForceEnable);
     }
 
     public boolean disableKeepInventoryForceEnable() {
@@ -196,6 +239,38 @@ public class RestrictionManager implements Listener {
     private boolean disableKeepInventoryForceEnable(boolean announce) {
         cancelScheduledKeepInventoryTasks();
         return setKeepInventoryForceEnabled(false, announce);
+    }
+
+    private boolean enableKeepInventoryForDuration(long durationTicks, Runnable disableAction) {
+        if (!isKeepInventoryManagementEnabled()) {
+            cancelScheduledKeepInventoryTasks();
+            keepInventoryForceEnable = false;
+            return false;
+        }
+
+        if (durationTicks <= 0L) {
+            disableAction.run();
+            return false;
+        }
+
+        boolean stateChanged = setKeepInventoryForceEnabled(true, true);
+
+        cancelScheduledKeepInventoryTasks();
+        if (stateChanged) {
+            broadcastKeepInventoryDuration(durationTicks);
+        }
+        else {
+            broadcastKeepInventoryRefresh(durationTicks);
+        }
+        scheduleUpcomingDisableAlert(durationTicks);
+
+        keepInventoryForceResetTask = plugin.getServer().getScheduler().runTaskLater(
+                plugin,
+                disableAction,
+                durationTicks
+        );
+
+        return stateChanged;
     }
 
     private void cancelScheduledKeepInventoryTasks() {
@@ -259,13 +334,23 @@ public class RestrictionManager implements Listener {
 
         String title = enabled ? ChatColor.GREEN + "KEEP INVENTORY ON" : ChatColor.RED + "KEEP INVENTORY OFF";
         String subtitle = enabled
-                ? ChatColor.YELLOW + "Deaths will keep items"
+                ? ChatColor.YELLOW + "All deaths keep items"
                 : ChatColor.YELLOW + "Normal death rules restored";
         String message = enabled
-                ? "&7&l> &aKeep inventory is now force-enabled"
-                : "&7&l> &cKeep inventory force-enable has ended";
+                ? "&7&l> &aKeep inventory is now force-enabled for everyone"
+                : "&7&l> &cKeep inventory force-enable has ended. Normal rules now apply";
 
         broadcast(title, subtitle, message);
+    }
+
+    private void broadcastKeepInventoryManualEnable() {
+        if (!areKeepInventoryAlertsEnabled()) {
+            return;
+        }
+
+        broadcastMessage(
+                "&7&l> &aKeep inventory will stay forced on until it is manually disabled"
+        );
     }
 
     private void broadcastKeepInventoryDuration(long durationTicks) {
@@ -274,6 +359,17 @@ public class RestrictionManager implements Listener {
         }
 
         broadcastMessage("&7&l> &aKeep inventory will stay forced on for &f" + formatDuration(durationTicks));
+    }
+
+    private void broadcastKeepInventoryRefresh(long durationTicks) {
+        if (!areKeepInventoryAlertsEnabled()) {
+            return;
+        }
+
+        broadcastMessage(
+                "&7&l> &aKeep inventory force-enable was refreshed. New remaining time: &f"
+                        + formatDuration(durationTicks)
+        );
     }
 
     private void broadcastUpcomingKeepInventoryChange(long remainingTicks) {
@@ -285,6 +381,7 @@ public class RestrictionManager implements Listener {
                 ChatColor.GOLD + "KEEP INVENTORY ENDING",
                 ChatColor.YELLOW + "Turns off in " + formatDuration(remainingTicks),
                 "&7&l> &eKeep inventory force-enable will end in &f" + formatDuration(remainingTicks)
+                        + "&e. Normal death rules will return after that"
         );
     }
 
@@ -315,5 +412,23 @@ public class RestrictionManager implements Listener {
         }
 
         return seconds + "s";
+    }
+
+    @EventHandler
+    public void onEntityExplosion(EntityExplodeEvent event) {
+        if (event.getEntity().getType() == EntityType.END_CRYSTAL) {
+            if (!MMBattlegrounds.getInstance().getConfig().getBoolean("end-crystals")) {
+                event.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onBlockExplosion(BlockExplodeEvent event) {
+        if (event.getExplodedBlockState().getType() == Material.RESPAWN_ANCHOR){
+            if (!MMBattlegrounds.getInstance().getConfig().getBoolean("respawn-anchors")) {
+                event.setCancelled(true);
+            }
+        }
     }
 }
