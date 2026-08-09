@@ -22,7 +22,7 @@ public class DropSetLocation implements CommandExecutor {
             Location location = player.getLocation();
 
             if (manager.getSelectedDrop(player) == null) {
-                sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&a&l> &cA drop is not selected"));
+                sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&c&l> &cA drop is not selected"));
                 return true;
             }
 

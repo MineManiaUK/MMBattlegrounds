@@ -5,8 +5,17 @@ import com.github.minemaniauk.MMBattlegrounds.commands.DropTimeTable;
 import com.github.minemaniauk.MMBattlegrounds.commands.ResetAllBorders;
 import com.github.minemaniauk.MMBattlegrounds.commands.StartSuddenDeath;
 import com.github.minemaniauk.MMBattlegrounds.commands.drops.*;
+import com.github.minemaniauk.MMBattlegrounds.commands.spawn.SetSpawn;
+import com.github.minemaniauk.MMBattlegrounds.commands.spawn.SpawnCommand;
 import com.github.minemaniauk.MMBattlegrounds.drops.DropManager;
+import com.github.minemaniauk.MMBattlegrounds.homes.commands.DelHome;
+import com.github.minemaniauk.MMBattlegrounds.homes.commands.HomeAdmin;
+import com.github.minemaniauk.MMBattlegrounds.homes.commands.HomeCommand;
+import com.github.minemaniauk.MMBattlegrounds.homes.commands.Homes;
+import com.github.minemaniauk.MMBattlegrounds.homes.commands.SetHome;
 import org.bukkit.*;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.*;
@@ -17,6 +26,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -28,6 +38,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 public final class MMBattlegrounds extends JavaPlugin implements Listener {
@@ -35,6 +46,7 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
     private static MMBattlegrounds instance;
     private ScoreboardManager scoreboardManager;
     private DropManager dropManager;
+    private RestrictionManager restictionManager;
     private FileConfiguration config;
     private File configFile;
     private FileConfiguration data;
@@ -70,9 +82,12 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
 
         scoreboardManager = new ScoreboardManager();
         dropManager = new DropManager(this);
+        restictionManager = new RestrictionManager(this);
 
         Bukkit.getScheduler().runTaskTimer(this, this::update, 0L, 20L);
         getServer().getPluginManager().registerEvents(this, this);
+        getServer().getPluginManager().registerEvents(restictionManager, this);
+        TeleportHelper.register(this);
         getCommand("startsuddendeath").setExecutor(new StartSuddenDeath());
         getCommand("dropcreate").setExecutor(new DropCreate());
         DropRemove dropRemove = new DropRemove();
@@ -84,7 +99,28 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
         getCommand("dropsetitems").setExecutor(new DropSetItems());
         getCommand("dropsetlocation").setExecutor(new DropSetLocation());
         getCommand("dropspawn").setExecutor(new DropSpawn());
+        getCommand("dropcancel").setExecutor(new DropCancel());
         getCommand("resetallborders").setExecutor(new ResetAllBorders());
+        DelHome delHome = new DelHome();
+        HomeAdmin homeAdmin = new HomeAdmin();
+        SetHome sethome = new SetHome();
+        HomeCommand homeCommand = new HomeCommand();
+        getCommand("homeadmin").setExecutor(homeAdmin);
+        getCommand("homeadmin").setTabCompleter(homeAdmin);
+        getCommand("delhome").setExecutor(delHome);
+        getCommand("delhome").setTabCompleter(delHome);
+        getCommand("sethome").setExecutor(sethome);
+        getCommand("sethome").setTabCompleter(sethome);
+        getCommand("home").setExecutor(homeCommand);
+        getCommand("home").setTabCompleter(homeCommand);
+        getCommand("homes").setExecutor(new Homes());
+
+        if (config.getBoolean("spawn-enabled")) {
+            getCommand("spawn").setExecutor(new SpawnCommand());
+            getCommand("setspawn").setExecutor(new SetSpawn());
+        }
+
+
         if (config.getBoolean("show-drop-timetable")) {
             getCommand("droptimetable").setExecutor(new DropTimeTable());
         }
@@ -92,7 +128,9 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
-        // Plugin shutdown logic
+        if (restictionManager != null) {
+            restictionManager.disableAllSilently();
+        }
     }
 
     @EventHandler
@@ -106,11 +144,22 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
             }
         }
 
+        if (!event.getPlayer().hasPlayedBefore()) {
+            onPlayerSpawn(event.getPlayer());
+        }
+
         if (gamePhase != GamePhase.NORMAL) {
             if (event.getPlayer().getGameMode() == GameMode.SURVIVAL) {
                 alivePlayers.add(event.getPlayer());
             }
             spreadNonOverworldPlayersInsideBorder();
+        }
+    }
+
+    @EventHandler
+    public void onInventoryClose(InventoryCloseEvent event) {
+        if (event.getPlayer() instanceof Player player) {
+            dropManager.handleInventoryClose(player, event.getInventory());
         }
     }
 
@@ -139,18 +188,81 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
     }
 
     @EventHandler
-    public void onPlayerDeath(PlayerDeathEvent event) {
-        Player player = event.getEntity();
+    public void PlayerRespawnEvent(PlayerRespawnEvent event) {
+        onPlayerSpawn(event.getPlayer());
+    }
 
-        if (config.getBoolean("keep-inventory-management")) {
-            if (isTagged(player)) {
-                event.setKeepInventory(false);
-            }
-            else {
-                event.setKeepInventory(true);
-                event.getDrops().clear();
+    private void onPlayerSpawn(Player player) {
+        if (player.getGameMode() != GameMode.SURVIVAL) {
+            return;
+        }
+
+        World world = Bukkit.getWorld("world");
+        if (world == null) {
+            return;
+        }
+
+        teleportToSafeSpawn(player, world);
+    }
+
+    private void teleportToSafeSpawn(Player player, World world) {
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        Location center = world.getSpawnLocation();
+
+        for (int i = 0; i < 100; i++) {
+            int x = center.getBlockX() + random.nextInt(-250, 251);
+            int z = center.getBlockZ() + random.nextInt(-250, 251);
+            int y = world.getHighestBlockYAt(x, z) + 1;
+
+            Location spawnLocation = new Location(world, x + 0.5, y, z + 0.5);
+
+            if (isSafeSpawn(spawnLocation)) {
+                Bukkit.getScheduler().runTask(this, () -> player.teleport(spawnLocation));
+                return;
             }
         }
+
+        Bukkit.getScheduler().runTaskLater(this, () -> teleportToSafeSpawn(player, world), 1L);
+    }
+
+    private boolean isSafeSpawn(Location location) {
+        Block feet = location.getBlock();
+        Block head = feet.getRelative(BlockFace.UP);
+        Block ground = feet.getRelative(BlockFace.DOWN);
+
+        Material groundType = ground.getType();
+
+        if (feet.isLiquid() || head.isLiquid()) {
+            return false;
+        }
+
+        if (feet.getType().isSolid() || head.getType().isSolid()) {
+            return false;
+        }
+
+        if (!groundType.isSolid()) {
+            return false;
+        }
+
+        if (groundType == Material.WATER || groundType == Material.LAVA) {
+            return false;
+        }
+
+        if (Tag.LEAVES.isTagged(groundType)) {
+            return false;
+        }
+
+        return groundType != Material.CACTUS
+                && groundType != Material.MAGMA_BLOCK
+                && groundType != Material.CAMPFIRE
+                && groundType != Material.SOUL_CAMPFIRE
+                && groundType != Material.FIRE
+                && groundType != Material.SOUL_FIRE;
+    }
+
+    @EventHandler
+    public void onPlayerDeath(PlayerDeathEvent event) {
+        Player player = event.getEntity();
 
         if (event.getEntity().getKiller() != null){
             combatTags.remove(event.getEntity().getKiller().getUniqueId());
@@ -282,7 +394,7 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
         return null;
     }
 
-    private boolean isTagged(Player player) {
+    public boolean isTagged(Player player) {
         Long expiry = combatTags.get(player.getUniqueId());
 
         if (expiry == null) {
@@ -394,24 +506,6 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
             if (event.getCause() == PlayerPortalEvent.TeleportCause.NETHER_PORTAL || event.getCause() == PlayerTeleportEvent.TeleportCause.END_PORTAL) {
                 event.setCancelled(true);
                 event.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('&', "&c&l> &cportals are disabled in sudden death."));
-            }
-        }
-    }
-
-    @EventHandler
-    public void onEntityExplosion(EntityExplodeEvent event) {
-        if (event.getEntity().getType() == EntityType.END_CRYSTAL) {
-            if (!config.getBoolean("end-crystals")) {
-                event.setCancelled(true);
-            }
-        }
-    }
-
-    @EventHandler
-    public void onBlockExplosion(BlockExplodeEvent event) {
-        if (event.getExplodedBlockState().getType() == Material.RESPAWN_ANCHOR){
-            if (!config.getBoolean("respawn-anchors")) {
-                event.setCancelled(true);
             }
         }
     }
@@ -626,6 +720,10 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
 
     public DropManager getDropManager() {
         return this.dropManager;
+    }
+
+    public RestrictionManager getRestictionManager() {
+        return this.restictionManager;
     }
 
     public FileConfiguration getData() {

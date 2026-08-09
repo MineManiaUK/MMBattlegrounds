@@ -6,11 +6,38 @@ import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class DropParticleManager {
+
+    public static final class ActiveArc {
+        private final CompletableFuture<Location> future;
+        private final BukkitTask task;
+
+        private ActiveArc(CompletableFuture<Location> future, BukkitTask task) {
+            this.future = future;
+            this.task = task;
+        }
+
+        public CompletableFuture<Location> future() {
+            return future;
+        }
+
+        public boolean cancel() {
+            if (future.isDone()) {
+                return false;
+            }
+
+            if (task != null) {
+                task.cancel();
+            }
+
+            return future.cancel(false);
+        }
+    }
 
     private final JavaPlugin plugin;
 
@@ -18,12 +45,12 @@ public class DropParticleManager {
         this.plugin = plugin;
     }
 
-    public CompletableFuture<Location> spawnArc(Location target) {
+    public ActiveArc spawnArc(Location target) {
         CompletableFuture<Location> future = new CompletableFuture<>();
 
         if (plugin == null || target == null || target.getWorld() == null) {
             future.completeExceptionally(new IllegalArgumentException("Invalid plugin or target location"));
-            return future;
+            return new ActiveArc(future, null);
         }
 
         World world = target.getWorld();
@@ -37,7 +64,7 @@ public class DropParticleManager {
 
         int totalTicks = ThreadLocalRandom.current().nextInt(minTime, maxTime);
 
-        new BukkitRunnable() {
+        BukkitTask task = new BukkitRunnable() {
             int tick = 0;
 
             @Override
@@ -77,7 +104,7 @@ public class DropParticleManager {
             }
         }.runTaskTimer(plugin, 0L, 1L);
 
-        return future;
+        return new ActiveArc(future, task);
     }
 
     private static Location randomStart(Location end) {
@@ -87,10 +114,10 @@ public class DropParticleManager {
         double angle = random.nextDouble(0, Math.PI * 2);
 
         // Far enough away for a 2–3 minute 
-        double distance = random.nextDouble(250, 500);
+        double distance = random.nextDouble(600, 1000);
 
         // Height above the target
-        double height = random.nextDouble(120, 220);
+        double height = random.nextDouble(600, 1000);
 
         double x = Math.cos(angle) * distance;
         double z = Math.sin(angle) * distance;

@@ -94,6 +94,23 @@ public class Drop {
                 + countItems(copy) + " item stacks.");
     }
 
+    public Inventory createEditorInventory() {
+        Inventory sourceInventory = inventory;
+
+        if (sourceInventory == null) {
+            sourceInventory = Bukkit.createInventory(null, 27, name + " Supply Drop");
+        }
+
+        Inventory editor = Bukkit.createInventory(
+                null,
+                sourceInventory.getSize(),
+                name + " Supply Drop"
+        );
+
+        copyInventory(sourceInventory, editor);
+        return editor;
+    }
+
     public static int countItems(Inventory inventory) {
         if (inventory == null) return 0;
 
@@ -108,15 +125,15 @@ public class Drop {
         return count;
     }
 
-    public void spawn(JavaPlugin javaPlugin) {
+    public DropParticleManager.ActiveArc spawn(JavaPlugin javaPlugin) {
         if (location == null || location.getWorld() == null) {
             javaPlugin.getLogger().warning("Cannot spawn drop '" + name + "': location is not set.");
-            return;
+            return null;
         }
 
         if (inventory == null) {
             javaPlugin.getLogger().warning("Cannot spawn drop '" + name + "': inventory is not loaded.");
-            return;
+            return null;
         }
 
         for (Player p : Bukkit.getOnlinePlayers()) {
@@ -130,7 +147,9 @@ public class Drop {
             p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&7&l> &6&lA supply drop is inbound to &a&l" + "X: " + location.getBlockX() + " Z: " + location.getBlockZ() ));
         }
 
-        plugin.getDropManager().particleManager.spawnArc(location).thenAccept(impactLocation -> {
+        DropParticleManager.ActiveArc activeArc = plugin.getDropManager().particleManager.spawnArc(location);
+
+        activeArc.future().thenAccept(impactLocation -> {
             if (impactLocation == null || impactLocation.getWorld() == null) {
                 javaPlugin.getLogger().warning("Drop '" + name + "' finished particles, but impact location was invalid.");
                 return;
@@ -162,6 +181,8 @@ public class Drop {
                 );
             }
         });
+
+        return activeArc;
     }
 
 

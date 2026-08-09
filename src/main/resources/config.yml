@@ -7,6 +7,9 @@ sudden-death-team-disband-time: 900000
 # Amount of millis which sudden death border should shrink over
 sudden-death-length: 1800000
 
+# Is spawn command enabled
+spawn-enabled: true
+
 # The default size of the worldborder
 default-border-size: 5000
 
@@ -31,8 +34,23 @@ end-crystals: false
 # Enable respawn anchors explosions
 respawn-anchors: false
 
+# Maximum number of homes a player can create without the unlimited permission
+max-homes: 3
+
+# Delay in seconds before TeleportHelper teleports a player
+teleport-delay: 5
+
 # Should the logic death by environment/mobs keep inventory and not if killed by another player (Turning this of means the server will use the vanilla gamerule IF TURNED ON MAKE SURE THE GAMERULE IS SET TO FALSE)
 keep-inventory-management: true
+
+# Broadcast keep inventory force-enable state changes and warnings
+keep-inventory-force-alerts: true
+
+# Warn this many ticks before keep inventory force-enable turns off
+keep-inventory-force-warning-ticks: 1200
+
+# How long a drop force-enables keep inventory for
+drop-keep-inventory-force-duration-ticks: 12000
 
 # Amount of time after being attacked by a player in which a death all be counted as a death by a player (Millis) Used by the keep inventory system
 combat-tag-time: 15000

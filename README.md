@@ -21,9 +21,10 @@ These are supply drops which can be activated by staff.
 | /dropcreate       | Create a drop                                                                           | mmbattlegrounds.drop.create       |
 | /dropremove       | Delete a drop                                                                           | mmbattlegrounds.drop.remove       |
 | /dropselect       | Select a drop to edit/spawn                                                             | mmbattlegrounds.drop.select       |
-| /dropsetitems     | Sets the selected drops contents (Uses a single chest which the executor is looking at) | mmbattlegrounds.drop.set.items    |
+| /dropsetitems     | Opens an inventory editor for the selected drop contents                                 | mmbattlegrounds.drop.set.items    |
 | /dropsetlocation  | Sets the selected drops location to the executors current location                      | mmbattlegrounds.drop.set.location |
 | /dropspawn        | Spawns in the selected drop with its set location and contents                          | mmbattlegrounds.drop.spawn        |
+| /dropcancel       | Cancels the selected drop if it is currently inbound                                   | mmbattlegrounds.drop.cancel       |
 | /resetallborders  | Sets the world border in all worlds to the default config value or the given value      | minecraft.command.worldborder     |
 
 
@@ -38,6 +39,9 @@ sudden-death-team-disband-time: 900000
 
 # Amount of time in millis which sudden death border should shrink over
 sudden-death-length: 1800000
+
+# Is spawn command enabled  
+spawn-enabled: true
 
 # The default size of the worldborder
 default-border-size: 5000
@@ -65,6 +69,15 @@ respawn-anchors: false
 
 # Should the logic death by environment/mobs keep inventory and not if killed by another player (Turning this of means the server will use the vanilla gamerule IF TURNED ON MAKE SURE THE GAMERULE IS SET TO FALSE)
 keep-inventory-management: true
+
+# Broadcast keep inventory force-enable state changes and warnings
+keep-inventory-force-alerts: true
+
+# Warn this many ticks before keep inventory force-enable turns off
+keep-inventory-force-warning-ticks: 1200
+
+# How long a drop force-enables keep inventory for
+drop-keep-inventory-force-duration-ticks: 12000
 
 # Amount of time after being attacked by a player in which a death all be counted as a death by a player (Millis) Used by the keep inventory system
 combat-tag-time: 15000
