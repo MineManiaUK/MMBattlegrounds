@@ -1,6 +1,8 @@
 package com.github.minemaniauk.MMBattlegrounds;
 
+import com.booksaw.betterTeams.Main;
 import com.booksaw.betterTeams.Team;
+import com.booksaw.betterTeams.database.BetterTeamsDatabase;
 import com.github.minemaniauk.MMBattlegrounds.commands.DropTimeTable;
 import com.github.minemaniauk.MMBattlegrounds.commands.ResetAllBorders;
 import com.github.minemaniauk.MMBattlegrounds.commands.StartSuddenDeath;
@@ -183,6 +185,22 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
         if (gamePhase != GamePhase.NORMAL){
             if (event.getPlayer().getGameMode() == GameMode.SURVIVAL){
                 alivePlayers.remove(event.getPlayer());
+            }
+        }
+    }
+
+    @EventHandler
+    public void onPlayerGameModeChange(PlayerGameModeChangeEvent event) {
+        if (gamePhase != GamePhase.NORMAL) {
+            if (event.getNewGameMode() == GameMode.SURVIVAL) {
+                if (!alivePlayers.contains(event.getPlayer())){
+                    alivePlayers.add(event.getPlayer());
+                }
+            }
+            else {
+                if (alivePlayers.contains(event.getPlayer())) {
+                    alivePlayers.remove(event.getPlayer());
+                }
             }
         }
     }
@@ -626,16 +644,10 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
     public void startSuddenDeathNoTeams() {
         gamePhase = GamePhase.SUDDEN_DEATH_NO_TEAMS;
 
-        List<String> teamNames = new ArrayList<>();
+        List<Team> teams = Team.getTeamManager().getLoadedTeamListClone().values().stream().toList();
 
-        for (Team team : Team.getTeamManager().getLoadedTeamListClone().values()) {
-            teamNames.add(team.getName());
-        }
-
-        for (String teamName : teamNames) {
-            String command = "teama disband " + teamName;
-
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+        for (Team team : teams) {
+            team.disband();
         }
 
         for (Player p : Bukkit.getOnlinePlayers()) {
