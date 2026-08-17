@@ -17,6 +17,7 @@ public class SetSpawn implements CommandExecutor {
                 Location location = p.getLocation();
 
                 MMBattlegrounds.getInstance().getData().set("spawn-location", location);
+                MMBattlegrounds.getInstance().saveData();
                 p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&7&l> &7Set spawn"));
                 return true;
             }
