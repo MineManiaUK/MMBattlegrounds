@@ -6,11 +6,8 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
 
 public class HomeData {
     public Player player;
@@ -36,30 +33,17 @@ public class HomeData {
     }
 
     public void save() {
-        File playerFile = getPlayerFile(player);
+        FileConfiguration dataFile = new YamlConfiguration();
 
-        try {
-            File parent = playerFile.getParentFile();
-            if (parent != null && !parent.exists() && !parent.mkdirs()) {
-                throw new IOException("Failed to create home data folder at " + parent.getAbsolutePath());
-            }
-
-            FileConfiguration dataFile = new YamlConfiguration();
-
-            for (Map.Entry<String, Home> entry : homes.entrySet()) {
-                dataFile.set(entry.getKey() + ".location", entry.getValue().location);
-            }
-
-            dataFile.save(playerFile);
-        } catch (IOException e) {
-            MMBattlegrounds.getInstance().getLogger().log(Level.SEVERE, "Something went wrong saving home data", e);
+        for (Map.Entry<String, Home> entry : homes.entrySet()) {
+            dataFile.set(entry.getKey() + ".location", entry.getValue().location);
         }
+
+        MMBattlegrounds.getInstance().savePlayerData(player, dataFile);
     }
 
     public static HomeData load(Player player) {
-        File playerFile = getPlayerFile(player);
-
-        FileConfiguration dataFile = YamlConfiguration.loadConfiguration(playerFile);
+        FileConfiguration dataFile = MMBattlegrounds.getInstance().loadPlayerData(player);
 
         HashMap<String, Home> homeMap = new HashMap<>();
         for (String key : dataFile.getKeys(false)) {
@@ -72,13 +56,5 @@ public class HomeData {
         }
 
         return new HomeData(player, homeMap);
-    }
-
-    private static File getPlayerFile(Player player) {
-        return new File(getHomesFolder(), player.getUniqueId() + ".yml");
-    }
-
-    private static File getHomesFolder() {
-        return new File(MMBattlegrounds.getInstance().getDataFolder(), "player-data");
     }
 }

@@ -1,48 +1,79 @@
 package com.github.minemaniauk.MMBattlegrounds;
 
+import com.booksaw.betterTeams.Team;
+import com.booksaw.betterTeams.team.TeamManager;
+import com.github.minemaniauk.MMBattlegrounds.drops.Drop;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.megavex.scoreboardlibrary.api.ScoreboardLibrary;
+import net.megavex.scoreboardlibrary.api.sidebar.Sidebar;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
-import org.bukkit.scoreboard.Criteria;
-import org.bukkit.scoreboard.DisplaySlot;
-import org.bukkit.scoreboard.Objective;
-import org.bukkit.scoreboard.Scoreboard;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 public class ScoreboardManager {
 
-    public Scoreboard scoreboard;
-    public Objective phaseObjective;
-    public Objective timeObjective;
+    public ScoreboardLibrary library;
+    public Map<UUID, Sidebar> sidebars = new HashMap<>();
 
     public ScoreboardManager() {
-        scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
-        phaseObjective = scoreboard.registerNewObjective("phase", Criteria.DUMMY, ChatColor.translateAlternateColorCodes('&', "&c&lPhase: &4None"));
-       timeObjective = scoreboard.registerNewObjective("time", Criteria.DUMMY, ChatColor.translateAlternateColorCodes('&', "&a&lTime remaining: &4None"));
+        library = getPlugin().getScoreboardLibrary();
     }
 
     public void AddPlayerScoreBoard(Player player) {
-        player.setScoreboard(scoreboard);
+        Sidebar sidebar = library.createSidebar();
+        sidebar.title(
+                Component.text("Breakneck ", NamedTextColor.YELLOW)
+                        .decorate(TextDecoration.BOLD)
+                        .append(
+                                Component.text("BG", NamedTextColor.GOLD)
+                                        .decoration(TextDecoration.BOLD, false)
+                        )
+        );
+
+        sidebar.line(0, Component.empty());
+        sidebar.line(1, Component.text(player.getName()).color(NamedTextColor.YELLOW));
+        sidebar.line(2, getTeamComponent(player));
+        //TODO SHOW DAMAGE/WEAKNESS LEVEL (Needs logic to be completed first)
+        //sidebar.line(3, Component.text("Damage Level: ").color(NamedTextColor.RED).append()))
+
+        sidebar.line(4, Component.empty());
+
+        sidebar.line(5, getDropStatus());
+        sidebar.line(6, getDropLocation());
+
+        sidebar.line(7, Component.empty());
+
+        sidebar.line(8, Component.text("Loading...").color(NamedTextColor.RED));
+        sidebar.line(9, Component.text("Loading...").color(NamedTextColor.GREEN).decorate(TextDecoration.BOLD));
+
+        sidebars.put(player.getUniqueId(), sidebar);
+        sidebar.addPlayer(player);
     }
 
-    private String lastTimeLine = null;
+    public void removePlayerScoreBoard(Player player) {
+        Sidebar sidebar = sidebars.get(player.getUniqueId());
+        sidebar.close();
+        sidebars.remove(player.getUniqueId());
+    }
 
-    public void update(long remainingTime, GamePhase phase) {
+    public void updateTime(long remainingTime, GamePhase phase) {
         long remainingTimeSeconds = Math.max(0L, remainingTime / 1000L);
-
-        if (lastTimeLine != null) {
-            phaseObjective.getScoreboard().resetScores(lastTimeLine);
-            lastTimeLine = null;
-        }
 
         switch (phase) {
             case NORMAL:
                 if (remainingTimeSeconds == 0L) {
-                    phaseObjective.setDisplayName(ChatColor.RED + "Waiting for sudden death...");
-
-                    lastTimeLine = ChatColor.GREEN.toString() + ChatColor.BOLD + "0d 0h 0m";
-                    phaseObjective.getScore(lastTimeLine).setScore(1);
-
-                    phaseObjective.setDisplaySlot(DisplaySlot.SIDEBAR);
+                    updatePhaseLines(
+                            Component.text("Waiting for sudden death...").color(NamedTextColor.RED),
+                            Component.text("0d 0h 0m").color(NamedTextColor.GREEN).decorate(TextDecoration.BOLD)
+                    );
                     return;
                 }
 
@@ -51,46 +82,119 @@ public class ScoreboardManager {
                 long normMinutes = (remainingTimeSeconds % 3600) / 60;
                 long normSeconds = remainingTimeSeconds % 60;
 
-                phaseObjective.setDisplayName(ChatColor.RED + "Sudden Death in:");
-
-                lastTimeLine = ChatColor.GREEN.toString() + ChatColor.BOLD
-                        + normDays + "d " + normHours + "h " + normMinutes + "m " + normSeconds + "s";
-
-                phaseObjective.getScore(lastTimeLine).setScore(1);
-                phaseObjective.setDisplaySlot(DisplaySlot.SIDEBAR);
+                updatePhaseLines(
+                        Component.text("Sudden Death in:").color(NamedTextColor.RED),
+                        Component.text(normDays + "d " + normHours + "h " + normMinutes + "m " + normSeconds + "s")
+                                .color(NamedTextColor.GREEN)
+                                .decorate(TextDecoration.BOLD)
+                );
                 break;
 
             case SUDDEN_DEATH:
                 long sdMinutes = remainingTimeSeconds / 60;
                 long sdSeconds = remainingTimeSeconds % 60;
 
-                phaseObjective.setDisplayName(ChatColor.RED + "Teams disband in:");
-
-                lastTimeLine = ChatColor.GREEN.toString() + ChatColor.BOLD
-                        + sdMinutes + "m " + sdSeconds + "s";
-
-                phaseObjective.getScore(lastTimeLine).setScore(1);
-                phaseObjective.setDisplaySlot(DisplaySlot.SIDEBAR);
+                updatePhaseLines(
+                        Component.text("Teams disband in:").color(NamedTextColor.RED),
+                        Component.text(sdMinutes + "m " + sdSeconds + "s")
+                                .color(NamedTextColor.GREEN)
+                                .decorate(TextDecoration.BOLD)
+                );
                 break;
 
             case SUDDEN_DEATH_NO_TEAMS:
-                phaseObjective.setDisplayName(ChatColor.RED.toString() + ChatColor.BOLD + "Last stand");
-
-                lastTimeLine = ChatColor.DARK_RED + "Everyone for themselves";
-                phaseObjective.getScore(lastTimeLine).setScore(1);
-
-                phaseObjective.setDisplaySlot(DisplaySlot.SIDEBAR);
+                updatePhaseLines(
+                        Component.text("Last stand").color(NamedTextColor.RED).decorate(TextDecoration.BOLD),
+                        Component.text("Everyone for themselves").color(NamedTextColor.DARK_RED)
+                );
                 break;
 
             case GAME_OVER:
-                phaseObjective.setDisplayName(ChatColor.RED.toString() + ChatColor.BOLD + "GAME OVER");
-
-                lastTimeLine = ChatColor.GRAY + "Thanks for playing";
-                phaseObjective.getScore(lastTimeLine).setScore(1);
-
-                phaseObjective.setDisplaySlot(DisplaySlot.SIDEBAR);
+                updatePhaseLines(
+                        Component.text("GAME OVER").color(NamedTextColor.RED).decorate(TextDecoration.BOLD),
+                        Component.text("Thanks for playing").color(NamedTextColor.GRAY)
+                );
                 break;
         }
     }
 
+    private void updatePhaseLines(Component phaseLine, Component timeLine) {
+        for (Sidebar sidebar : sidebars.values()) {
+            sidebar.line(8, phaseLine);
+            sidebar.line(9, timeLine);
+        }
+    }
+
+    public void updateDropStatuses() {
+        for (Sidebar sidebar : sidebars.values()) {
+            sidebar.line(5, getDropStatus());
+            sidebar.line(6, getDropLocation());
+        }
+    }
+
+    public void updatePlayerStatuses() {
+        for (Map.Entry<UUID, Sidebar> entry : sidebars.entrySet()) {
+            Player p = Bukkit.getPlayer(entry.getKey());
+            Sidebar sidebar = entry.getValue();
+
+            sidebar.line(1, Component.text(p.getName()).color(NamedTextColor.YELLOW));
+            sidebar.line(2, getTeamComponent(p));
+            //TODO SHOW DAMAGE LEVEL (Needs damage level logic to be completed first)
+            //sidebar.line(2, Component.text("Damage Level: ").color(NamedTextColor.RED).append()))
+        }
+    }
+
+    private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
+
+    public static Component getTeamComponent(Player player) {
+        if (!Bukkit.getPluginManager().isPluginEnabled("BetterTeams")) {
+            return Component.text("No Team", NamedTextColor.GRAY);
+        }
+
+        Team team = Team.getTeam(player);
+
+        if (team == null) {
+            return Component.text("No Team", NamedTextColor.GRAY);
+        }
+
+        return MINI_MESSAGE.deserialize(team.getTag());
+    }
+
+    private Component getDropStatus() {
+        String lastDropName = getPlugin().getData().getString("last-drop-name");
+
+        if (getPlugin().getDropManager().isDropActive()) {
+            return Component.text("Drop Inbound...").color(NamedTextColor.RED);
+        }
+
+        if (getPlugin().getDropManager().wasLastDropCancelled()) {
+            return Component.text("Drop Cancelled...").color(NamedTextColor.DARK_RED);
+        }
+
+        if (lastDropName == null || lastDropName.isEmpty()) {
+            return Component.text("No Drop").color(NamedTextColor.RED);
+        }
+
+        return Component.text("Drop Landed...").color(NamedTextColor.RED);
+    }
+
+    private Component getDropLocation() {
+        String lastDropName = getPlugin().getData().getString("last-drop-name");
+
+        if (lastDropName == null || lastDropName.isEmpty() || getPlugin().getDropManager().wasLastDropCancelled()) {
+            return Component.text("X:- Z:-").color(NamedTextColor.GREEN).decorate(TextDecoration.BOLD);
+        }
+
+        Drop drop = getPlugin().getDropManager().getDrop(lastDropName);
+        if (drop == null) {
+            return Component.text("X:- Z:-").color(NamedTextColor.GREEN).decorate(TextDecoration.BOLD);
+        }
+
+        Location dropLocation = drop.location;
+        return Component.text("X:" + dropLocation.getBlockX() + " Z:" + dropLocation.getBlockZ()).color(NamedTextColor.GREEN).decorate(TextDecoration.BOLD);
+    }
+
+    private MMBattlegrounds getPlugin() {
+        return MMBattlegrounds.getInstance();
+    }
 }

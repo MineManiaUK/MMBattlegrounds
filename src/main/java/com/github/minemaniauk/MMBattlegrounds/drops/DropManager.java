@@ -46,6 +46,7 @@ public class DropManager {
     public HashMap<Player, Drop> selectedDrop = new HashMap<>();
     private final Map<String, DropParticleManager.ActiveArc> activeDrops = new HashMap<>();
     private final Map<UUID, DropEditorSession> activeEditorSessions = new HashMap<>();
+    private boolean lastDropCancelled;
 
     public DropManager(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -229,10 +230,17 @@ public class DropManager {
             return SpawnResult.INVALID_DROP;
         }
 
-        MMBattlegrounds.getInstance().getData().set("last-drop-name", drop.name);
-
         activeDrops.put(key, activeArc);
-        activeArc.future().whenComplete((location, throwable) -> activeDrops.remove(key, activeArc));
+        lastDropCancelled = false;
+        getPlugin().getData().set("last-drop-name", drop.name);
+        getPlugin().saveData();
+        getPlugin().getScoreboardManager().updateDropStatuses();
+
+        activeArc.future().whenComplete((location, throwable) -> {
+            if (activeDrops.remove(key, activeArc)) {
+                getPlugin().getScoreboardManager().updateDropStatuses();
+            }
+        });
         getPlugin().getRestictionManager().enableAllForDuration(
                 getPlugin().getRestictionManager().getDropKeepInventoryDurationTicks()
         );
@@ -245,11 +253,17 @@ public class DropManager {
         }
 
         String key = activeDropKey(name);
-        DropParticleManager.ActiveArc activeArc = activeDrops.remove(key);
+        DropParticleManager.ActiveArc activeArc = activeDrops.get(key);
 
         if (activeArc == null || !activeArc.cancel()) {
             return CancelResult.NOT_ACTIVE;
         }
+
+        activeDrops.remove(key, activeArc);
+        lastDropCancelled = true;
+        getPlugin().getData().set("last-drop-name", null);
+        getPlugin().saveData();
+        getPlugin().getScoreboardManager().updateDropStatuses();
 
         if (activeDrops.isEmpty()) {
             getPlugin().getRestictionManager().disableAll();
@@ -260,7 +274,11 @@ public class DropManager {
     }
 
     public boolean isDropActive() {
-        return activeDrops.isEmpty();
+        return !activeDrops.isEmpty();
+    }
+
+    public boolean wasLastDropCancelled() {
+        return lastDropCancelled;
     }
 
     private void notifyDropCancelled(String name) {
