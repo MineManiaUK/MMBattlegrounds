@@ -331,7 +331,7 @@ public class RestrictionManager implements Listener {
         if (!areKeepInventoryAlertsEnabled()) {
             return;
         }
-        
+
         String message = enabled
                 ? "&7&l> &aKeep inventory is now force-enabled for everyone"
                 : "&7&l> &cKeep inventory force-enable has ended. Normal rules now apply";
