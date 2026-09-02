@@ -331,16 +331,12 @@ public class RestrictionManager implements Listener {
         if (!areKeepInventoryAlertsEnabled()) {
             return;
         }
-
-        String title = enabled ? ChatColor.GREEN + "KEEP INVENTORY ON" : ChatColor.RED + "KEEP INVENTORY OFF";
-        String subtitle = enabled
-                ? ChatColor.YELLOW + "All deaths keep items"
-                : ChatColor.YELLOW + "Normal death rules restored";
+        
         String message = enabled
                 ? "&7&l> &aKeep inventory is now force-enabled for everyone"
                 : "&7&l> &cKeep inventory force-enable has ended. Normal rules now apply";
 
-        broadcast(title, subtitle, message);
+        broadcast(message);
     }
 
     private void broadcastKeepInventoryManualEnable() {
@@ -378,16 +374,13 @@ public class RestrictionManager implements Listener {
         }
 
         broadcast(
-                ChatColor.GOLD + "KEEP INVENTORY ENDING",
-                ChatColor.YELLOW + "Turns off in " + formatDuration(remainingTicks),
                 "&7&l> &eKeep inventory force-enable will end in &f" + formatDuration(remainingTicks)
                         + "&e. Normal death rules will return after that"
         );
     }
 
-    private void broadcast(String title, String subtitle, String message) {
+    private void broadcast(String message) {
         for (Player player : plugin.getServer().getOnlinePlayers()) {
-            player.sendTitle(title, subtitle, 10, 50, 20);
             player.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
         }
     }
