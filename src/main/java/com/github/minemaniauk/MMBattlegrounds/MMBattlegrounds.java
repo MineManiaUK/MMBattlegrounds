@@ -513,9 +513,7 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
             return;
         }
 
-        if (event.getEntity() instanceof Player) {
-            event.setCancelled(true);
-        }
+        event.setCancelled(true);
     }
 
     @EventHandler
