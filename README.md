@@ -1,6 +1,6 @@
 # MMBattlegrounds
 
-MMBattlegrounds is the plugin used in the server internally known as batt2 it is NOT a plugin used on the battlegrounds smp
+MMBattlegrounds is the plugin used in the server Breakneck Battlegrounds it is NOT a plugin used on the battlegrounds smp
 
 > **Versioning**
 > 
