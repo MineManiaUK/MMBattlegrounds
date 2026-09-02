@@ -40,19 +40,29 @@ public class ScoreboardManager {
 
         sidebar.line(0, Component.empty());
         sidebar.line(1, Component.text(player.getName()).color(NamedTextColor.YELLOW));
-        sidebar.line(2, getTeamComponent(player));
+        sidebar.line(
+                2,
+                Component.text("Kills: ", NamedTextColor.RED)
+                        .append(Component.text(
+                                getPlugin().loadPlayerData(player).getInt("kills", 0),
+                                NamedTextColor.DARK_RED
+                        ))
+        );
+
         //TODO SHOW DAMAGE/WEAKNESS LEVEL (Needs logic to be completed first)
         //sidebar.line(3, Component.text("Damage Level: ").color(NamedTextColor.RED).append()))
 
-        sidebar.line(4, Component.empty());
+        sidebar.line(4, getTeamComponent(player));
 
-        sidebar.line(5, getDropStatus());
-        sidebar.line(6, getDropLocation());
+        sidebar.line(5, Component.empty());
 
-        sidebar.line(7, Component.empty());
+        sidebar.line(6, getDropStatus());
+        sidebar.line(7, getDropLocation());
 
-        sidebar.line(8, Component.text("Loading...").color(NamedTextColor.RED));
-        sidebar.line(9, Component.text("Loading...").color(NamedTextColor.GREEN).decorate(TextDecoration.BOLD));
+        sidebar.line(8, Component.empty());
+
+        sidebar.line(9, Component.text("Loading...").color(NamedTextColor.RED));
+        sidebar.line(10, Component.text("Loading...").color(NamedTextColor.GREEN).decorate(TextDecoration.BOLD));
 
         sidebars.put(player.getUniqueId(), sidebar);
         sidebar.addPlayer(player);
@@ -120,15 +130,15 @@ public class ScoreboardManager {
 
     private void updatePhaseLines(Component phaseLine, Component timeLine) {
         for (Sidebar sidebar : sidebars.values()) {
-            sidebar.line(8, phaseLine);
-            sidebar.line(9, timeLine);
+            sidebar.line(9, phaseLine);
+            sidebar.line(10, timeLine);
         }
     }
 
     public void updateDropStatuses() {
         for (Sidebar sidebar : sidebars.values()) {
-            sidebar.line(5, getDropStatus());
-            sidebar.line(6, getDropLocation());
+            sidebar.line(6, getDropStatus());
+            sidebar.line(7, getDropLocation());
         }
     }
 
@@ -138,9 +148,19 @@ public class ScoreboardManager {
             Sidebar sidebar = entry.getValue();
 
             sidebar.line(1, Component.text(p.getName()).color(NamedTextColor.YELLOW));
-            sidebar.line(2, getTeamComponent(p));
+            sidebar.line(
+                    2,
+                    Component.text("Kills: ", NamedTextColor.RED)
+                            .append(Component.text(
+                                    getPlugin().loadPlayerData(p).getInt("kills", 0),
+                                    NamedTextColor.DARK_RED
+                            ))
+            );
+
             //TODO SHOW DAMAGE LEVEL (Needs damage level logic to be completed first)
-            //sidebar.line(2, Component.text("Damage Level: ").color(NamedTextColor.RED).append()))
+            //sidebar.line(3, Component.text("Damage Level: ").color(NamedTextColor.RED).append()))
+
+            sidebar.line(4, getTeamComponent(p));
         }
     }
 
