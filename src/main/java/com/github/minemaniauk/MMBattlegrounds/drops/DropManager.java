@@ -217,17 +217,19 @@ public class DropManager {
             return SpawnResult.NO_SELECTION;
         }
 
-        String key = activeDropKey(drop.name);
-
-        if (activeDrops.containsKey(key)) {
+        if (!activeDrops.isEmpty()) {
             return SpawnResult.ALREADY_ACTIVE;
         }
+
+        String key = activeDropKey(drop.name);
 
         DropParticleManager.ActiveArc activeArc = drop.spawn(plugin);
 
         if (activeArc == null) {
             return SpawnResult.INVALID_DROP;
         }
+
+        MMBattlegrounds.getInstance().getData().set("last-drop-name", drop.name);
 
         activeDrops.put(key, activeArc);
         activeArc.future().whenComplete((location, throwable) -> activeDrops.remove(key, activeArc));
@@ -255,6 +257,10 @@ public class DropManager {
 
         notifyDropCancelled(name);
         return CancelResult.CANCELLED;
+    }
+
+    public boolean isDropActive() {
+        return activeDrops.isEmpty();
     }
 
     private void notifyDropCancelled(String name) {
