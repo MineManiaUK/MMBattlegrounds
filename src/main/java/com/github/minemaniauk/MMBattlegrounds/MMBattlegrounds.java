@@ -71,9 +71,9 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
         config = YamlConfiguration.loadConfiguration(configFile);
         dataFile = new File(getDataFolder(), "data.yml");
         data = YamlConfiguration.loadConfiguration(dataFile);
-        suddenDeathScheduledStartTime = config.getLong("sudden-death-start");
-        teamDisbandTime = config.getLong("sudden-death-team-disband-time");
-        suddenDeathLength = config.getLong("sudden-death-length");
+        suddenDeathScheduledStartTime = TimeUnit.SECONDS.toMillis(config.getLong("sudden-death-start"));
+        teamDisbandTime = TimeUnit.SECONDS.toMillis(config.getLong("sudden-death-team-disband-time"));
+        suddenDeathLength = TimeUnit.SECONDS.toMillis(config.getLong("sudden-death-length"));
         gamePhase = GamePhase.NORMAL;
 
         Bukkit.getScheduler().runTaskTimer(
@@ -448,7 +448,7 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
 
         combatTags.put(
                 player.getUniqueId(),
-                System.currentTimeMillis() + config.getLong("combat-tag-time")
+                System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(config.getLong("combat-tag-time"))
         );
 
         if (!wasTagged) {

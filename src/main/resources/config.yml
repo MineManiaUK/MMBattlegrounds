@@ -1,11 +1,11 @@
-# The time at which sudden death is scheduled to start unix time
+# The Unix timestamp in seconds at which sudden death is scheduled to start
 sudden-death-start:
 
-# Remaining time in millis in sudden death for team disbanding
-sudden-death-team-disband-time: 900000
+# Time in seconds before teams disband during sudden death
+sudden-death-team-disband-time: 900
 
-# Amount of millis which sudden death border should shrink over
-sudden-death-length: 1800000
+# Time in seconds for the sudden death border to shrink
+sudden-death-length: 1800
 
 # Is spawn command enabled
 spawn-enabled: true
@@ -53,8 +53,8 @@ keep-inventory-force-warning-ticks: 1200
 # How long a drop force-enables keep inventory for
 drop-keep-inventory-force-duration-ticks: 12000
 
-# Amount of time after being attacked by a player in which a death all be counted as a death by a player (Millis) Used by the keep inventory system
-combat-tag-time: 15000
+# Time in seconds after a player attack during which a death counts as a player kill
+combat-tag-time: 15
 
 # Commands disabled in sudden death
 sudden-death-disabled-commands:
