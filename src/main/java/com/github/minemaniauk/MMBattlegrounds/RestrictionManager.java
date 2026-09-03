@@ -9,6 +9,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockExplodeEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityToggleGlideEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -410,7 +411,16 @@ public class RestrictionManager implements Listener {
     @EventHandler
     public void onEntityExplosion(EntityExplodeEvent event) {
         if (event.getEntity().getType() == EntityType.END_CRYSTAL) {
-            if (!MMBattlegrounds.getInstance().getConfig().getBoolean("end-crystals")) {
+            if (!MMBattlegrounds.getInstance().getConfig().getBoolean("end-crystal-block-damage")) {
+                event.blockList().clear();
+            }
+        }
+    }
+
+    @EventHandler
+    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
+        if (event.getDamager().getType() == EntityType.END_CRYSTAL) {
+            if (!MMBattlegrounds.getInstance().getConfig().getBoolean("end-crystal-entity-damage")) {
                 event.setCancelled(true);
             }
         }
@@ -419,7 +429,7 @@ public class RestrictionManager implements Listener {
     @EventHandler
     public void onBlockExplosion(BlockExplodeEvent event) {
         if (event.getExplodedBlockState().getType() == Material.RESPAWN_ANCHOR){
-            if (!MMBattlegrounds.getInstance().getConfig().getBoolean("respawn-anchors")) {
+            if (!MMBattlegrounds.getInstance().getConfig().getBoolean("respawn-anchors-explode")) {
                 event.setCancelled(true);
             }
         }
