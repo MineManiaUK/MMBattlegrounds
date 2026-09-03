@@ -50,6 +50,7 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
     private ScoreboardLibrary scoreboardLibrary;
     private DropManager dropManager;
     private RestrictionManager restrictionManager;
+    private BalanceSystemManager balanceSystemManager;
     private FileConfiguration config;
     private File configFile;
     private FileConfiguration data;
@@ -93,11 +94,13 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
         scoreboardManager = new ScoreboardManager();
         dropManager = new DropManager(this);
         restrictionManager = new RestrictionManager(this);
+        balanceSystemManager = new BalanceSystemManager(this);
 
         Bukkit.getScheduler().runTaskTimer(this, this::update, 0L, 20L);
         getServer().getPluginManager().registerEvents(this, this);
         getServer().getPluginManager().registerEvents(restrictionManager, this);
         TeleportHelper.register(this);
+
         getCommand("startsuddendeath").setExecutor(new StartSuddenDeath());
         getCommand("dropcreate").setExecutor(new DropCreate());
         DropRemove dropRemove = new DropRemove();
@@ -862,6 +865,8 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
     public DropManager getDropManager() {
         return this.dropManager;
     }
+
+    public BalanceSystemManager getBalanceSystemManager() {return this.balanceSystemManager; }
 
     public RestrictionManager getRestictionManager() {
         return this.restrictionManager;

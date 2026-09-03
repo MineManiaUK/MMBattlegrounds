@@ -61,11 +61,18 @@ drop-mix-ticks: 4800
 # Max amount of ticks which a drop takes to fall
 drop-max-ticks: 7201
 
+# Damage effect balancing systems
+damage-balance-enabled: false
+damage-balance-effects-zero-range: 3
+damage-balance-effects-multiplier: 2
+damage-balance-effects-max-level: 5
+
 # Enable end crystal explosions
-end-crystals: false
+end-crystal-entity-damage: false
+end-crystal-block-damage: false
 
 # Enable respawn anchors explosions
-respawn-anchors: false
+respawn-anchors-explode: false
 
 # Should the logic death by environment/mobs keep inventory and not if killed by another player (Turning this of means the server will use the vanilla gamerule IF TURNED ON MAKE SURE THE GAMERULE IS SET TO FALSE)
 keep-inventory-management: true

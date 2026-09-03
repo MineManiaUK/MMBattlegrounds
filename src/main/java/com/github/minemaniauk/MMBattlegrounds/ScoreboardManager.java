@@ -49,8 +49,35 @@ public class ScoreboardManager {
                         ))
         );
 
-        //TODO SHOW DAMAGE/WEAKNESS LEVEL (Needs logic to be completed first)
-        //sidebar.line(3, Component.text("Damage Level: ").color(NamedTextColor.RED).append()))
+        if (getPlugin().getConfig().getBoolean("damage-balance-enabled")) {
+            int balanceLevel = getPlugin()
+                    .getBalanceSystemManager()
+                    .getPermanentBalanceLevel(player);
+
+            Component damageLevel;
+
+            if (balanceLevel > 0) {
+                damageLevel = Component.text("Strength " + balanceLevel)
+                        .color(NamedTextColor.GREEN);
+
+            } else if (balanceLevel < 0) {
+                damageLevel = Component.text("Weakness " + Math.abs(balanceLevel))
+                        .color(NamedTextColor.DARK_RED);
+
+            } else {
+                damageLevel = Component.text("Neutral")
+                        .color(NamedTextColor.GRAY);
+            }
+
+            sidebar.line(
+                    3,
+                    Component.text("Damage Level: ")
+                            .color(NamedTextColor.RED)
+                            .append(damageLevel)
+            );
+        }
+
+        sidebar.line(4, getTeamComponent(player));
 
         sidebar.line(4, getTeamComponent(player));
 
@@ -157,8 +184,33 @@ public class ScoreboardManager {
                             ))
             );
 
-            //TODO SHOW DAMAGE LEVEL (Needs damage level logic to be completed first)
-            //sidebar.line(3, Component.text("Damage Level: ").color(NamedTextColor.RED).append()))
+            if (getPlugin().getConfig().getBoolean("damage-balance-enabled")) {
+                int balanceLevel = getPlugin()
+                        .getBalanceSystemManager()
+                        .getPermanentBalanceLevel(p);
+
+                Component damageLevel;
+
+                if (balanceLevel > 0) {
+                    damageLevel = Component.text("Strength " + balanceLevel)
+                            .color(NamedTextColor.GREEN);
+
+                } else if (balanceLevel < 0) {
+                    damageLevel = Component.text("Weakness " + Math.abs(balanceLevel))
+                            .color(NamedTextColor.DARK_RED);
+
+                } else {
+                    damageLevel = Component.text("Neutral")
+                            .color(NamedTextColor.GRAY);
+                }
+
+                sidebar.line(
+                        3,
+                        Component.text("Damage Level: ")
+                                .color(NamedTextColor.RED)
+                                .append(damageLevel)
+                );
+            }
 
             sidebar.line(4, getTeamComponent(p));
         }

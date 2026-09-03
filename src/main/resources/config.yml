@@ -28,6 +28,12 @@ drop-mix-ticks: 4800
 # Max amount of ticks which a drop takes to fall
 drop-max-ticks: 7201
 
+# Damage effect balancing systems
+damage-balance-enabled: false
+damage-balance-effects-zero-range: 3
+damage-balance-effects-multiplier: 2
+damage-balance-effects-max-level: 5
+
 # Enable end crystal explosions
 end-crystal-entity-damage: false
 end-crystal-block-damage: false
