@@ -29,10 +29,11 @@ drop-mix-ticks: 4800
 drop-max-ticks: 7201
 
 # Enable end crystal explosions
-end-crystals: false
+end-crystal-entity-damage: false
+end-crystal-block-damage: false
 
 # Enable respawn anchors explosions
-respawn-anchors: false
+respawn-anchors-explode: false
 
 # Maximum number of homes a player can create without the unlimited permission
 max-homes: 3
@@ -75,3 +76,5 @@ sudden-death-disabled-commands:
 
 no-teams-disabled-commands:
   - "/team"
+
+drop-disabled-commands:

@@ -6,6 +6,9 @@ import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerCommandSendEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -322,6 +325,23 @@ public class DropManager {
         getPlugin().saveData();
 
         return section;
+    }
+
+    @EventHandler
+    public void onCommand(PlayerCommandPreprocessEvent event) {
+        if (!isDropActive()) return;
+
+        if (event.getPlayer().hasPermission("mmbattlegrounds.bypass.commanddisablement")) return;
+
+        String message = event.getMessage().toLowerCase();
+        List<String> disabledCommands = getPlugin().getConfiguration().getStringList("drop-disabled-commands");
+
+        for (String command : disabledCommands) {
+            if (message.equals(command) || message.startsWith(command + " ")) {
+                event.setCancelled(true);
+                event.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('&', "&cThis command is disabled in drop events"));
+            }
+        }
     }
 
     private MMBattlegrounds getPlugin() {

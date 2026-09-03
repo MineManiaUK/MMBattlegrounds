@@ -103,4 +103,9 @@ sudden-death-disabled-commands:
 # Commands which are disabled when teams are disabled (Players which have "mmbattlegrounds.bypass.commanddisablement" are not affected)
 no-teams-disabled-commands:
   - "/team"
+
+# Commands disabled when a drop is active (Players which have "mmbattlegrounds.bypass.commanddisablement" are not affected)
+drop-disabled-commands:
+  - "/command1"
+  - "/command2"
 ```
