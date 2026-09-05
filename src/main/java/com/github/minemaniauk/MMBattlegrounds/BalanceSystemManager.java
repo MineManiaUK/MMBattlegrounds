@@ -28,8 +28,9 @@ public class BalanceSystemManager implements Listener {
 
         int kills = playerConfig.getInt("kills");
         int deaths = playerConfig.getInt("deaths");
+        int tune = playerConfig.getInt("tune", 0);
 
-        int netKills = kills - deaths;
+        int netKills = (kills - deaths) + tune;
         int distance = Math.abs(netKills);
 
         if (distance < zeroRange + effectMultiple) {

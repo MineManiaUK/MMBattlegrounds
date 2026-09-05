@@ -52,6 +52,9 @@ commands:
   setspawn:
     permission: "mmbattlegrounds.setspawn"
 
+  battplayerdata:
+    permission: "mmbattlegrounds.command.playerdata"
+
 
 permissions:
   mmbattlegrounds.bypass.commanddisablement:

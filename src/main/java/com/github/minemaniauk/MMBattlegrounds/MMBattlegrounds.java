@@ -3,6 +3,7 @@ package com.github.minemaniauk.MMBattlegrounds;
 import com.booksaw.betterTeams.Team;
 import com.booksaw.betterTeams.customEvents.*;
 import com.github.minemaniauk.MMBattlegrounds.commands.DropTimeTable;
+import com.github.minemaniauk.MMBattlegrounds.commands.PlayerDataCommand;
 import com.github.minemaniauk.MMBattlegrounds.commands.ResetAllBorders;
 import com.github.minemaniauk.MMBattlegrounds.commands.StartSuddenDeath;
 import com.github.minemaniauk.MMBattlegrounds.commands.drops.*;
@@ -127,6 +128,9 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
         getCommand("home").setExecutor(homeCommand);
         getCommand("home").setTabCompleter(homeCommand);
         getCommand("homes").setExecutor(new Homes());
+        PlayerDataCommand playerDataCommand = new PlayerDataCommand();
+        getCommand("battplayerdata").setExecutor(playerDataCommand);
+        getCommand("battplayerdata").setTabCompleter(playerDataCommand);
 
         if (config.getBoolean("spawn-enabled")) {
             getCommand("spawn").setExecutor(new SpawnCommand());

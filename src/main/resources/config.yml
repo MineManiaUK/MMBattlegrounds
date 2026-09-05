@@ -33,6 +33,7 @@ damage-balance-enabled: false
 damage-balance-effects-zero-range: 3
 damage-balance-effects-multiplier: 2
 damage-balance-effects-max-level: 5
+damage-balance-damage-per-level: 0.10
 
 # Enable end crystal explosions
 end-crystal-entity-damage: false
