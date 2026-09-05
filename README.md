@@ -12,33 +12,49 @@ Sudden death occurs before a server reset and functions like a battle royale las
 
 ### Drops
 These are supply drops which can be activated by staff.
+You can manage them with the drop admin commands below
 
-## Commands
+## Homes
+The plugin includes a home and spawn function which can be used with these commands
 
-| Command           | Description                                                                             | Permission                        |
-|-------------------|-----------------------------------------------------------------------------------------|-----------------------------------|
-| /startsuddendeath | Activates the sudden death phase                                                        | mmbattlegrounds.suddendeath.start |
-| /dropcreate       | Create a drop                                                                           | mmbattlegrounds.drop.create       |
-| /dropremove       | Delete a drop                                                                           | mmbattlegrounds.drop.remove       |
-| /dropselect       | Select a drop to edit/spawn                                                             | mmbattlegrounds.drop.select       |
-| /dropsetitems     | Opens an inventory editor for the selected drop contents                                 | mmbattlegrounds.drop.set.items    |
-| /dropsetlocation  | Sets the selected drops location to the executors current location                      | mmbattlegrounds.drop.set.location |
-| /dropspawn        | Spawns in the selected drop with its set location and contents                          | mmbattlegrounds.drop.spawn        |
-| /dropcancel       | Cancels the selected drop if it is currently inbound                                   | mmbattlegrounds.drop.cancel       |
-| /resetallborders  | Sets the world border in all worlds to the default config value or the given value      | minecraft.command.worldborder     |
+### Commands
+| Command    | Description                    | Permission                  |
+|------------|--------------------------------|-----------------------------|
+| /home      |                                |                             |
+| /homes     |                                |                             |
+| /sethome   |                                |                             |
+| /delhome   |                                |                             |
+| /spawn     |                                |                             |
+| /homeadmin | Access and manage player homes | mmbattlegrounds.homes.admin |
+| /setspawn  | Set the spawn location         | mmbattlegrounds.setspawn    |
 
+## Admin Commands
+
+| Command           | Description                                                                             | Permission                         |
+|-------------------|-----------------------------------------------------------------------------------------|------------------------------------|
+| /startsuddendeath | Activates the sudden death phase                                                        | mmbattlegrounds.suddendeath.start  |
+| /dropcreate       | Create a drop                                                                           | mmbattlegrounds.drop.create        |
+| /dropremove       | Delete a drop                                                                           | mmbattlegrounds.drop.remove        |
+| /dropselect       | Select a drop to edit/spawn                                                             | mmbattlegrounds.drop.select        |
+| /dropsetitems     | Sets the selected drops contents (Uses a single chest which the executor is looking at) | mmbattlegrounds.drop.set.items     |
+| /dropsetlocation  | Sets the selected drops location to the executors current location                      | mmbattlegrounds.drop.set.location  |
+| /dropspawn        | Spawns in the selected drop with its set location and contents                          | mmbattlegrounds.drop.spawn         |
+| /dropcancel       | Cancel the active drop                                                                  | mmbattlegrounds.drop.cancel        |
+| /resetallborders  | Sets the world border in all worlds to the default config value or the given value      | minecraft.command.worldborder      |
+| /battplayerdata   | Edit a users player data                                                                | mmbattlegrounds.command.playerdata |
+| /homeadmin        | Access and manage player homes                                                          | mmbattlegrounds.homes.admin        |
 
 ## Config
 
 ```yaml
-# The timestamp in Unix millis until sudden death is scheduled to start (visual only sudden death must be started manually with /startsuddendeath) 
+# The timestamp in Unix time until sudden death is scheduled to start (visual only sudden death must be started manually with /startsuddendeath) 
 sudden-death-start:
 
-# The amount of time remaining in millis in the sudden death length before teams are disbanded
-sudden-death-team-disband-time: 900000
+# The amount of time remaining in secs in the sudden death length before teams are disbanded
+sudden-death-team-disband-time: 900
 
-# Amount of time in millis which sudden death border should shrink over
-sudden-death-length: 1800000
+# Amount of time in secs which sudden death border should shrink over
+sudden-death-length: 1800
 
 # Is spawn command enabled  
 spawn-enabled: true
@@ -66,6 +82,7 @@ damage-balance-enabled: false
 damage-balance-effects-zero-range: 3
 damage-balance-effects-multiplier: 2
 damage-balance-effects-max-level: 5
+damage-balance-damage-per-level: 0.10
 
 # Enable end crystal explosions
 end-crystal-entity-damage: false
@@ -86,8 +103,8 @@ keep-inventory-force-warning-ticks: 1200
 # How long a drop force-enables keep inventory for
 drop-keep-inventory-force-duration-ticks: 12000
 
-# Amount of time after being attacked by a player in which a death all be counted as a death by a player (Millis) Used by the keep inventory system
-combat-tag-time: 15000
+# Amount of time after being attacked by a player in which a death all be counted as a death by a player (secs) Used by the keep inventory system
+combat-tag-time: 15
 
 # Commands which are disabled in sudden death (Players which have "mmbattlegrounds.bypass.commanddisablement" are not affected)
 sudden-death-disabled-commands:
