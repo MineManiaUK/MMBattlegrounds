@@ -29,10 +29,21 @@ drop-mix-ticks: 4800
 drop-max-ticks: 7201
 
 # Damage effect balancing systems
-damage-balance-enabled: false
-damage-balance-effects-zero-range: 3
+# Enables or disables the entire damage balancing system.
+damage-balance-enabled: true
+
+# The neutral K/D difference range before any balance modifier starts.
+damage-balance-effects-zero-range: 5
+
+# How many additional net kills/deaths are required for each balance level.
 damage-balance-effects-multiplier: 2
+
+# Maximum balance level that can be applied.
+# Prevents the damage bonus/penalty from increasing indefinitely.
 damage-balance-effects-max-level: 5
+
+# Percentage damage change applied per balance level.
+# 0.10 = 10% per level
 damage-balance-damage-per-level: 0.10
 
 # Enable end crystal explosions

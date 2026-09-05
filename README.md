@@ -6,13 +6,37 @@ MMBattlegrounds is the plugin used in the server Breakneck Battlegrounds it is N
 > 
 > The first number represents the season, the second represents major changes, and the third represents minor changes or patches.
 > 
-### Sudden death
+> Last Updated for version `3.0.0`
+> 
+## Sudden death
 
 Sudden death occurs before a server reset and functions like a battle royale last player standing is crowned the winner of that season
 
-### Drops
+## Drops
 These are supply drops which can be activated by staff.
 You can manage them with the drop admin commands below
+
+## Damage balancing
+
+This is a system which increases or decreases a player's outgoing damage based on their net number of kills.
+
+The balance value is calculated from:
+
+`netKills = (kills - deaths) + tune`
+
+Players with more kills than deaths receive a damage reduction, while players with more deaths than kills receive a damage increase.
+
+The system uses player data keys:
+- `kills` - Total number of player kills.
+- `deaths` - Total number of player deaths.
+- `tune` - Acts as a manual adjustment to the player's effective net-kill value
+
+And config keys:
+- `damage-balance-enabled` - Enables or disables the damage balancing system.
+- `damage-balance-effects-zero-range` - The neutral net-kill range before a balance level begins to apply.
+- `damage-balance-effects-multiplier` - The number of additional net kills or deaths required to increase the balance level.
+- `damage-balance-effects-max-level` - The maximum balance level that can be applied, preventing the damage modifier from scaling indefinitely.
+- `damage-balance-damage-per-level` - The percentage increase or decrease in outgoing damage applied for each balance level. For example, `0.10` means 10% per level.
 
 ## Homes
 The plugin includes a home and spawn function which can be used with these commands
@@ -78,10 +102,21 @@ drop-mix-ticks: 4800
 drop-max-ticks: 7201
 
 # Damage effect balancing systems
-damage-balance-enabled: false
-damage-balance-effects-zero-range: 3
+# Enables or disables the entire damage balancing system.
+damage-balance-enabled: true
+
+# The neutral K/D difference range before any balance modifier starts.
+damage-balance-effects-zero-range: 5
+
+# How many additional net kills/deaths are required for each balance level.
 damage-balance-effects-multiplier: 2
+
+# Maximum balance level that can be applied.
+# Prevents the damage bonus/penalty from increasing indefinitely.
 damage-balance-effects-max-level: 5
+
+# Percentage damage change applied per balance level.
+# 0.10 = 10% per level
 damage-balance-damage-per-level: 0.10
 
 # Enable end crystal explosions
