@@ -26,8 +26,8 @@ public class BalanceSystemManager implements Listener {
         int maxLevel =
                 getConfig().getInt("damage-balance-effects-max-level");
 
-        int kills = playerConfig.getInt("kills");
-        int deaths = playerConfig.getInt("deaths");
+        int kills = playerConfig.getInt("kills", 0);
+        int deaths = playerConfig.getInt("deaths", 0);
         int tune = playerConfig.getInt("tune", 0);
 
         int netKills = (kills - deaths) + tune;
