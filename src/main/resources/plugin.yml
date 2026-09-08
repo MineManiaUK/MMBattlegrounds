@@ -5,9 +5,7 @@ main: com.github.minemaniauk.MMBattlegrounds.MMBattlegrounds
 api-version: '26.1'
 depend:
   - FastAsyncWorldEdit
-softDepend:
   - BetterTeams
-  - HomePlugin
 commands:
   startsuddendeath:
     permission: "mmbattlegrounds.suddendeath.start"
@@ -53,6 +51,9 @@ commands:
 
   setspawn:
     permission: "mmbattlegrounds.setspawn"
+
+  battplayerdata:
+    permission: "mmbattlegrounds.command.playerdata"
 
 
 permissions:

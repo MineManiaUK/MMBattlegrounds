@@ -22,7 +22,7 @@ public class DropSpawn implements CommandExecutor {
                 ));
                 case ALREADY_ACTIVE -> sender.sendMessage(ChatColor.translateAlternateColorCodes(
                         '&',
-                        "&c&l> &cThat drop is already inbound"
+                        "&c&l> &cA supply drop is already inbound"
                 ));
                 case INVALID_DROP -> sender.sendMessage(ChatColor.translateAlternateColorCodes(
                         '&',

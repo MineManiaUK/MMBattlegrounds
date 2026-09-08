@@ -1,11 +1,11 @@
-# The time at which sudden death is scheduled to start unix time
+# The Unix timestamp in seconds at which sudden death is scheduled to start
 sudden-death-start:
 
-# Remaining time in millis in sudden death for team disbanding
-sudden-death-team-disband-time: 900000
+# Time in seconds before teams disband during sudden death
+sudden-death-team-disband-time: 900
 
-# Amount of millis which sudden death border should shrink over
-sudden-death-length: 1800000
+# Time in seconds for the sudden death border to shrink
+sudden-death-length: 1800
 
 # Is spawn command enabled
 spawn-enabled: true
@@ -28,11 +28,30 @@ drop-mix-ticks: 4800
 # Max amount of ticks which a drop takes to fall
 drop-max-ticks: 7201
 
+# Damage effect balancing systems
+# Enables or disables the entire damage balancing system.
+damage-balance-enabled: true
+
+# The neutral K/D difference range before any balance modifier starts.
+damage-balance-effects-zero-range: 5
+
+# How many additional net kills/deaths are required for each balance level.
+damage-balance-effects-multiplier: 2
+
+# Maximum balance level that can be applied.
+# Prevents the damage bonus/penalty from increasing indefinitely.
+damage-balance-effects-max-level: 5
+
+# Percentage damage change applied per balance level.
+# 0.10 = 10% per level
+damage-balance-damage-per-level: 0.10
+
 # Enable end crystal explosions
-end-crystals: false
+end-crystal-entity-damage: false
+end-crystal-block-damage: false
 
 # Enable respawn anchors explosions
-respawn-anchors: false
+respawn-anchors-explode: false
 
 # Maximum number of homes a player can create without the unlimited permission
 max-homes: 3
@@ -52,8 +71,8 @@ keep-inventory-force-warning-ticks: 1200
 # How long a drop force-enables keep inventory for
 drop-keep-inventory-force-duration-ticks: 12000
 
-# Amount of time after being attacked by a player in which a death all be counted as a death by a player (Millis) Used by the keep inventory system
-combat-tag-time: 15000
+# Time in seconds after a player attack during which a death counts as a player kill
+combat-tag-time: 15
 
 # Commands disabled in sudden death
 sudden-death-disabled-commands:
@@ -75,3 +94,5 @@ sudden-death-disabled-commands:
 
 no-teams-disabled-commands:
   - "/team"
+
+drop-disabled-commands:

@@ -1,9 +1,9 @@
 package com.github.minemaniauk.MMBattlegrounds;
 
-import com.booksaw.betterTeams.Main;
 import com.booksaw.betterTeams.Team;
-import com.booksaw.betterTeams.database.BetterTeamsDatabase;
+import com.booksaw.betterTeams.customEvents.*;
 import com.github.minemaniauk.MMBattlegrounds.commands.DropTimeTable;
+import com.github.minemaniauk.MMBattlegrounds.commands.PlayerDataCommand;
 import com.github.minemaniauk.MMBattlegrounds.commands.ResetAllBorders;
 import com.github.minemaniauk.MMBattlegrounds.commands.StartSuddenDeath;
 import com.github.minemaniauk.MMBattlegrounds.commands.drops.*;
@@ -15,6 +15,9 @@ import com.github.minemaniauk.MMBattlegrounds.homes.commands.HomeAdmin;
 import com.github.minemaniauk.MMBattlegrounds.homes.commands.HomeCommand;
 import com.github.minemaniauk.MMBattlegrounds.homes.commands.Homes;
 import com.github.minemaniauk.MMBattlegrounds.homes.commands.SetHome;
+import net.megavex.scoreboardlibrary.api.ScoreboardLibrary;
+import net.megavex.scoreboardlibrary.api.exception.NoPacketAdapterAvailableException;
+import net.megavex.scoreboardlibrary.api.noop.NoopScoreboardLibrary;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -23,10 +26,8 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.*;
@@ -47,8 +48,10 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
 
     private static MMBattlegrounds instance;
     private ScoreboardManager scoreboardManager;
+    private ScoreboardLibrary scoreboardLibrary;
     private DropManager dropManager;
-    private RestrictionManager restictionManager;
+    private RestrictionManager restrictionManager;
+    private BalanceSystemManager balanceSystemManager;
     private FileConfiguration config;
     private File configFile;
     private FileConfiguration data;
@@ -70,9 +73,9 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
         config = YamlConfiguration.loadConfiguration(configFile);
         dataFile = new File(getDataFolder(), "data.yml");
         data = YamlConfiguration.loadConfiguration(dataFile);
-        suddenDeathScheduledStartTime = config.getLong("sudden-death-start");
-        teamDisbandTime = config.getLong("sudden-death-team-disband-time");
-        suddenDeathLength = config.getLong("sudden-death-length");
+        suddenDeathScheduledStartTime = TimeUnit.SECONDS.toMillis(config.getLong("sudden-death-start"));
+        teamDisbandTime = TimeUnit.SECONDS.toMillis(config.getLong("sudden-death-team-disband-time"));
+        suddenDeathLength = TimeUnit.SECONDS.toMillis(config.getLong("sudden-death-length"));
         gamePhase = GamePhase.NORMAL;
 
         Bukkit.getScheduler().runTaskTimer(
@@ -82,14 +85,23 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
                 20L
         );
 
+        try {
+            scoreboardLibrary = ScoreboardLibrary.loadScoreboardLibrary(this);
+        } catch (NoPacketAdapterAvailableException e) {
+            scoreboardLibrary = new NoopScoreboardLibrary();
+            this.getLogger().warning("Server version unsupported, scoreboard functionality will not be visible!");
+        }
+
         scoreboardManager = new ScoreboardManager();
         dropManager = new DropManager(this);
-        restictionManager = new RestrictionManager(this);
+        restrictionManager = new RestrictionManager(this);
+        balanceSystemManager = new BalanceSystemManager(this);
 
         Bukkit.getScheduler().runTaskTimer(this, this::update, 0L, 20L);
         getServer().getPluginManager().registerEvents(this, this);
-        getServer().getPluginManager().registerEvents(restictionManager, this);
+        getServer().getPluginManager().registerEvents(restrictionManager, this);
         TeleportHelper.register(this);
+
         getCommand("startsuddendeath").setExecutor(new StartSuddenDeath());
         getCommand("dropcreate").setExecutor(new DropCreate());
         DropRemove dropRemove = new DropRemove();
@@ -116,6 +128,9 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
         getCommand("home").setExecutor(homeCommand);
         getCommand("home").setTabCompleter(homeCommand);
         getCommand("homes").setExecutor(new Homes());
+        PlayerDataCommand playerDataCommand = new PlayerDataCommand();
+        getCommand("battplayerdata").setExecutor(playerDataCommand);
+        getCommand("battplayerdata").setTabCompleter(playerDataCommand);
 
         if (config.getBoolean("spawn-enabled")) {
             getCommand("spawn").setExecutor(new SpawnCommand());
@@ -130,8 +145,8 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
-        if (restictionManager != null) {
-            restictionManager.disableAllSilently();
+        if (restrictionManager != null) {
+            restrictionManager.disableAllSilently();
         }
     }
 
@@ -167,6 +182,8 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onPlayerLeave(PlayerQuitEvent event) {
+        scoreboardManager.removePlayerScoreBoard(event.getPlayer());
+
         if (isTagged(event.getPlayer())) {
             event.getPlayer().setHealth(0);
         }
@@ -180,7 +197,58 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
     }
 
     @EventHandler
+    public void onTeamJoin(PlayerJoinTeamEvent event) {
+        Bukkit.getScheduler().runTask(this, () -> {
+            scoreboardManager.updatePlayerStatuses();
+        });
+    }
+
+    @EventHandler
+    public void onTeamLeave(PlayerLeaveTeamEvent event) {
+        Bukkit.getScheduler().runTask(this, () -> {
+            scoreboardManager.updatePlayerStatuses();
+        });
+    }
+
+    @EventHandler
+    public void onTeamCreate(CreateTeamEvent event) {
+        Bukkit.getScheduler().runTask(this, () -> {
+            scoreboardManager.updatePlayerStatuses();
+        });
+    }
+
+    @EventHandler
+    public void onTeamDisband(DisbandTeamEvent event) {
+        Bukkit.getScheduler().runTask(this, () -> {
+            scoreboardManager.updatePlayerStatuses();
+        });
+    }
+
+    @EventHandler
+    public void onTeamNameChange(TeamNameChangeEvent event) {
+        Bukkit.getScheduler().runTask(this, () -> {
+            scoreboardManager.updatePlayerStatuses();
+        });
+    }
+
+    @EventHandler
+    public void onTeamTagChange(TeamTagChangeEvent event) {
+        Bukkit.getScheduler().runTask(this, () -> {
+            scoreboardManager.updatePlayerStatuses();
+        });
+    }
+
+    @EventHandler
+    public void onTeamColorChange(TeamColorChangeEvent event) {
+        Bukkit.getScheduler().runTask(this, () -> {
+            scoreboardManager.updatePlayerStatuses();
+        });
+    }
+
+
+    @EventHandler
     public void onPlayerKicked(PlayerKickEvent event) {
+        scoreboardManager.removePlayerScoreBoard(event.getPlayer());
         combatTags.remove(event.getPlayer().getUniqueId());
         if (gamePhase != GamePhase.NORMAL){
             if (event.getPlayer().getGameMode() == GameMode.SURVIVAL){
@@ -285,6 +353,19 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
         if (event.getEntity().getKiller() != null){
             combatTags.remove(event.getEntity().getKiller().getUniqueId());
             event.getEntity().getKiller().sendMessage(ChatColor.GREEN + "You are no longer in combat");
+
+            // Increment player deaths
+            FileConfiguration playerData = loadPlayerData(player);
+            int playerDeaths = playerData.getInt("deaths", 0);
+            playerData.set("deaths", playerDeaths + 1);
+            savePlayerData(player, playerData);
+
+            // Increment killer kills
+            Player killer = event.getEntity().getKiller();
+            FileConfiguration killerData = loadPlayerData(killer);
+            int killerKills = killerData.getInt("kills", 0);
+            killerData.set("kills", killerKills + 1);
+            savePlayerData(killer, killerData);
         }
 
         if (isTagged(player)) {
@@ -292,7 +373,7 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
             player.sendMessage(ChatColor.GREEN + "You are no longer in combat");
         }
 
-
+        scoreboardManager.updatePlayerStatuses();
 
         if (gamePhase != GamePhase.NORMAL) {
 
@@ -374,7 +455,7 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
 
         combatTags.put(
                 player.getUniqueId(),
-                System.currentTimeMillis() + config.getLong("combat-tag-time")
+                System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(config.getLong("combat-tag-time"))
         );
 
         if (!wasTagged) {
@@ -513,9 +594,7 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
             return;
         }
 
-        if (event.getEntity() instanceof Player) {
-            event.setCancelled(true);
-        }
+        event.setCancelled(true);
     }
 
     @EventHandler
@@ -570,7 +649,7 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
             case NORMAL:
                 long normRemainingTimeMillis = Math.max(0L, suddenDeathScheduledStartTime - now);
 
-                scoreboardManager.update(normRemainingTimeMillis, GamePhase.NORMAL);
+                scoreboardManager.updateTime(normRemainingTimeMillis, GamePhase.NORMAL);
                 break;
 
             case SUDDEN_DEATH:
@@ -582,15 +661,15 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
                     return;
                 }
 
-                scoreboardManager.update(teamDisbandRemainingMillis, GamePhase.SUDDEN_DEATH);
+                scoreboardManager.updateTime(teamDisbandRemainingMillis, GamePhase.SUDDEN_DEATH);
                 break;
 
             case SUDDEN_DEATH_NO_TEAMS:
-                scoreboardManager.update(0L, GamePhase.SUDDEN_DEATH_NO_TEAMS);
+                scoreboardManager.updateTime(0L, GamePhase.SUDDEN_DEATH_NO_TEAMS);
                 break;
 
             case GAME_OVER:
-                scoreboardManager.update(0L, GamePhase.GAME_OVER);
+                scoreboardManager.updateTime(0L, GamePhase.GAME_OVER);
                 break;
         }
     }
@@ -729,12 +808,71 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
         }
     }
 
+    public File getPlayerDataFolder() {
+        File playerDataFolder = new File(getDataFolder(), "player-data");
+
+        if (!playerDataFolder.exists() && !playerDataFolder.mkdirs()) {
+            getLogger().warning("Failed to create player data folder at " + playerDataFolder.getAbsolutePath());
+        }
+
+        return playerDataFolder;
+    }
+
+    public File getPlayerDataFile(Player player) {
+        return getPlayerDataFile(player.getUniqueId());
+    }
+
+    public File getPlayerDataFile(UUID playerId) {
+        return new File(getPlayerDataFolder(), playerId + ".yml");
+    }
+
+    public FileConfiguration loadPlayerData(Player player) {
+        return loadPlayerData(player.getUniqueId());
+    }
+
+    public FileConfiguration loadPlayerData(UUID playerId) {
+        return YamlConfiguration.loadConfiguration(getPlayerDataFile(playerId));
+    }
+
+    public boolean savePlayerData(Player player, FileConfiguration playerData) {
+        return savePlayerData(player.getUniqueId(), playerData);
+    }
+
+    public boolean savePlayerData(UUID playerId, FileConfiguration playerData) {
+        try {
+            playerData.save(getPlayerDataFile(playerId));
+            return true;
+        } catch (IOException e) {
+            getLogger().log(java.util.logging.Level.SEVERE, "Failed to save player data for " + playerId, e);
+            return false;
+        }
+    }
+
+    public boolean deletePlayerData(Player player) {
+        return deletePlayerData(player.getUniqueId());
+    }
+
+    public boolean deletePlayerData(UUID playerId) {
+        File playerDataFile = getPlayerDataFile(playerId);
+        return !playerDataFile.exists() || playerDataFile.delete();
+    }
+
+    public ScoreboardLibrary getScoreboardLibrary() {
+        return this.scoreboardLibrary;
+    }
+
+    public ScoreboardManager getScoreboardManager() {
+        return this.scoreboardManager;
+    }
+
     public DropManager getDropManager() {
         return this.dropManager;
     }
 
+    public BalanceSystemManager getBalanceSystemManager() {return this.balanceSystemManager; }
+
     public RestrictionManager getRestictionManager() {
-        return this.restictionManager;
+        return this.restrictionManager;
     }
 
     public FileConfiguration getData() {

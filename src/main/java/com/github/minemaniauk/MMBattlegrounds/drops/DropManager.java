@@ -6,6 +6,9 @@ import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerCommandSendEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -46,6 +49,7 @@ public class DropManager {
     public HashMap<Player, Drop> selectedDrop = new HashMap<>();
     private final Map<String, DropParticleManager.ActiveArc> activeDrops = new HashMap<>();
     private final Map<UUID, DropEditorSession> activeEditorSessions = new HashMap<>();
+    private boolean lastDropCancelled;
 
     public DropManager(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -217,11 +221,11 @@ public class DropManager {
             return SpawnResult.NO_SELECTION;
         }
 
-        String key = activeDropKey(drop.name);
-
-        if (activeDrops.containsKey(key)) {
+        if (!activeDrops.isEmpty()) {
             return SpawnResult.ALREADY_ACTIVE;
         }
+
+        String key = activeDropKey(drop.name);
 
         DropParticleManager.ActiveArc activeArc = drop.spawn(plugin);
 
@@ -230,7 +234,16 @@ public class DropManager {
         }
 
         activeDrops.put(key, activeArc);
-        activeArc.future().whenComplete((location, throwable) -> activeDrops.remove(key, activeArc));
+        lastDropCancelled = false;
+        getPlugin().getData().set("last-drop-name", drop.name);
+        getPlugin().saveData();
+        getPlugin().getScoreboardManager().updateDropStatuses();
+
+        activeArc.future().whenComplete((location, throwable) -> {
+            if (activeDrops.remove(key, activeArc)) {
+                getPlugin().getScoreboardManager().updateDropStatuses();
+            }
+        });
         getPlugin().getRestictionManager().enableAllForDuration(
                 getPlugin().getRestictionManager().getDropKeepInventoryDurationTicks()
         );
@@ -243,11 +256,17 @@ public class DropManager {
         }
 
         String key = activeDropKey(name);
-        DropParticleManager.ActiveArc activeArc = activeDrops.remove(key);
+        DropParticleManager.ActiveArc activeArc = activeDrops.get(key);
 
         if (activeArc == null || !activeArc.cancel()) {
             return CancelResult.NOT_ACTIVE;
         }
+
+        activeDrops.remove(key, activeArc);
+        lastDropCancelled = true;
+        getPlugin().getData().set("last-drop-name", null);
+        getPlugin().saveData();
+        getPlugin().getScoreboardManager().updateDropStatuses();
 
         if (activeDrops.isEmpty()) {
             getPlugin().getRestictionManager().disableAll();
@@ -255,6 +274,14 @@ public class DropManager {
 
         notifyDropCancelled(name);
         return CancelResult.CANCELLED;
+    }
+
+    public boolean isDropActive() {
+        return !activeDrops.isEmpty();
+    }
+
+    public boolean wasLastDropCancelled() {
+        return lastDropCancelled;
     }
 
     private void notifyDropCancelled(String name) {
@@ -298,6 +325,23 @@ public class DropManager {
         getPlugin().saveData();
 
         return section;
+    }
+
+    @EventHandler
+    public void onCommand(PlayerCommandPreprocessEvent event) {
+        if (!isDropActive()) return;
+
+        if (event.getPlayer().hasPermission("mmbattlegrounds.bypass.commanddisablement")) return;
+
+        String message = event.getMessage().toLowerCase();
+        List<String> disabledCommands = getPlugin().getConfiguration().getStringList("drop-disabled-commands");
+
+        for (String command : disabledCommands) {
+            if (message.equals(command) || message.startsWith(command + " ")) {
+                event.setCancelled(true);
+                event.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('&', "&cThis command is disabled in drop events"));
+            }
+        }
     }
 
     private MMBattlegrounds getPlugin() {

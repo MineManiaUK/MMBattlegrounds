@@ -20,9 +20,6 @@ public final class TeleportHelper implements Listener {
 
     private static final Map<UUID, BukkitTask> countdowns = new HashMap<>();
 
-    private TeleportHelper() {
-    }
-
     public static void register(JavaPlugin plugin) {
         plugin.getServer().getPluginManager().registerEvents(new TeleportHelper(), plugin);
     }
