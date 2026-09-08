@@ -680,7 +680,11 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
         suddenDeathStartTime = System.currentTimeMillis();
 
         alivePlayers.clear();
-        alivePlayers.addAll(getServer().getOnlinePlayers());
+        for (Player p : getServer().getOnlinePlayers()) {
+            if (p.getGameMode() == GameMode.SURVIVAL) {
+                alivePlayers.add(p);
+            }
+        }
 
         long suddenDeathEndTime = suddenDeathStartTime + suddenDeathLength;
         long suddenDeathRemainingMillis = Math.max(0L, suddenDeathEndTime - System.currentTimeMillis());
