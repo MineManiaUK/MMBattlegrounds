@@ -574,8 +574,7 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
                 break;
 
             case SUDDEN_DEATH:
-
-                long teamDisbandAt = suddenDeathStartTime + teamDisbandTime;
+                long teamDisbandAt = suddenDeathStartTime + (suddenDeathLength - teamDisbandTime);
                 long teamDisbandRemainingMillis = Math.max(0L, teamDisbandAt - now);
 
                 if (teamDisbandRemainingMillis <= 0L) {
