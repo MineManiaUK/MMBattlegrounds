@@ -801,6 +801,55 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
         }
     }
 
+    public void startRisingLava() {
+        World world = Bukkit.getWorld("world");
+
+        if (world == null) {
+            getLogger().severe("(Rising lava) No World found. Please use default level names");
+            return;
+        }
+
+        WorldBorder border = world.getWorldBorder();
+        int level = -60;
+        Location borderCenter = border.getCenter();
+        borderCenter.setY(level);
+        double borderRadius = (border.getSize() / 2) + 1;
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                Location minLocation = borderCenter.clone().add(borderRadius, 0, borderRadius);
+                Location maxLocation = borderCenter.clone().subtract(borderRadius, 0, borderRadius);
+                fillArea(minLocation, maxLocation, Material.LAVA);
+
+            }
+        }.runTaskTimer(this, 0L, getConfiguration().getInt("rising-lava-level-time", 40));
+    }
+
+    public void fillArea(Location loc1, Location loc2, Material material) {
+        World world = loc1.getWorld();
+        if (world == null || !world.equals(loc2.getWorld())) {
+            throw new IllegalArgumentException("Locations must be in the same world!");
+        }
+
+        // Calculate the bounding box min and max coordinate
+        int minX = Math.min(loc1.getBlockX(), loc2.getBlockX());
+        int maxX = Math.max(loc1.getBlockX(), loc2.getBlockX());
+        int minY = Math.min(loc1.getBlockY(), loc2.getBlockY());
+        int maxY = Math.max(loc1.getBlockY(), loc2.getBlockY());
+        int minZ = Math.min(loc1.getBlockZ(), loc2.getBlockZ());
+        int maxZ = Math.max(loc1.getBlockZ(), loc2.getBlockZ());
+
+        for (int x = minX; x <= maxX; x++) {
+            for (int y = minY; y <= maxY; y++) {
+                for (int z = minZ; z <= maxZ; z++) {
+                    Block block = world.getBlockAt(x, y, z);
+                    block.setType(material, false);
+                }
+            }
+        }
+    }
+
     public void saveData() {
         try {
             data.save(dataFile);
