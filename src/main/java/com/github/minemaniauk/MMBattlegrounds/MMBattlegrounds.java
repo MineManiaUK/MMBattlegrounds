@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
 public final class MMBattlegrounds extends JavaPlugin implements Listener {
 
@@ -723,11 +724,25 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
     public void startSuddenDeathNoTeams() {
         gamePhase = GamePhase.SUDDEN_DEATH_NO_TEAMS;
 
-        List<Team> teams = Team.getTeamManager().getLoadedTeamListClone().values().stream().toList();
+        List<Team> teams = Team.getTeamManager()
+                .getLoadedTeamListClone()
+                .values()
+                .stream()
+                .toList();
 
-        for (Team team : teams) {
-            team.disband();
-        }
+        Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
+            for (Team team : teams) {
+                try {
+                    team.disband();
+                } catch (Exception e) {
+                    getLogger().log(
+                            Level.SEVERE,
+                            "Failed to disband BetterTeams team " + team.getName(),
+                            e
+                    );
+                }
+            }
+        });
 
         for (Player p : Bukkit.getOnlinePlayers()) {
             p.sendTitle(
@@ -754,7 +769,7 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
         double centerX = border.getCenter().getX();
         double centerZ = border.getCenter().getZ();
 
-        double radius = (border.getSize() / 2.0) - 10.0; // 10 block safety margin
+        double radius = Math.max(1.0, (border.getSize() / 2.0) - 10.0); // 10 block safety margin
         double minDistance = 50.0;
 
         for (Player p : getServer().getOnlinePlayers()) {
