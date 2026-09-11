@@ -266,9 +266,7 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
                 }
             }
             else {
-                if (alivePlayers.contains(event.getPlayer())) {
-                    alivePlayers.remove(event.getPlayer());
-                }
+                alivePlayers.remove(event.getPlayer());
             }
         }
     }
@@ -609,7 +607,6 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onCommand(PlayerCommandPreprocessEvent event) {
-        
         if (gamePhase == GamePhase.NORMAL){
             return;
         }
@@ -796,12 +793,19 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
             ));
         }
 
+        startRisingLava();
+
         for (Player p : Bukkit.getOnlinePlayers()) {
             p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&7&l> &fAll alive players now have &6glowing"));
+            p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&7&l> &6Lava &fis now rising"));
         }
     }
 
     public void startRisingLava() {
+        if (!getConfig().getBoolean("rising-lava-enabled")) {
+            return;
+        }
+
         World world = Bukkit.getWorld("world");
 
         if (world == null) {
@@ -810,18 +814,31 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
         }
 
         WorldBorder border = world.getWorldBorder();
-        int level = -60;
+
         Location borderCenter = border.getCenter();
-        borderCenter.setY(level);
         double borderRadius = (border.getSize() / 2) + 1;
 
         new BukkitRunnable() {
+            private int level = -64;
+
             @Override
             public void run() {
-                Location minLocation = borderCenter.clone().add(borderRadius, 0, borderRadius);
-                Location maxLocation = borderCenter.clone().subtract(borderRadius, 0, borderRadius);
+                if (gamePhase == GamePhase.GAME_OVER) {
+                    cancel();
+                    return;
+                }
+
+                Location minLocation = borderCenter.clone()
+                        .add(borderRadius, 0, borderRadius);
+                Location maxLocation = borderCenter.clone()
+                        .subtract(borderRadius, 0, borderRadius);
+
+                minLocation.setY(level);
+                maxLocation.setY(level);
+
                 fillArea(minLocation, maxLocation, Material.LAVA);
 
+                level++;
             }
         }.runTaskTimer(this, 0L, getConfiguration().getInt("rising-lava-level-time", 40));
     }
