@@ -28,6 +28,12 @@ drop-mix-ticks: 4800
 # Max amount of ticks which a drop takes to fall
 drop-max-ticks: 7201
 
+# Is sudden death lava rising enabled?
+rising-lava-enabled: false
+
+# How long the lava takes to rise 1 block in ticks (40 = 2secs)
+rising-lava-level-time: 40
+
 # Damage effect balancing systems
 # Enables or disables the entire damage balancing system.
 damage-balance-enabled: true

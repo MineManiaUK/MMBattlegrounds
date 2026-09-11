@@ -267,9 +267,7 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
                 }
             }
             else {
-                if (alivePlayers.contains(event.getPlayer())) {
-                    alivePlayers.remove(event.getPlayer());
-                }
+                alivePlayers.remove(event.getPlayer());
             }
         }
     }
@@ -610,7 +608,6 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onCommand(PlayerCommandPreprocessEvent event) {
-        
         if (gamePhase == GamePhase.NORMAL){
             return;
         }
@@ -811,8 +808,77 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
             ));
         }
 
+        startRisingLava();
+
         for (Player p : Bukkit.getOnlinePlayers()) {
             p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&7&l> &fAll alive players now have &6glowing"));
+            p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&7&l> &6Lava &fis now rising"));
+        }
+    }
+
+    public void startRisingLava() {
+        if (!getConfig().getBoolean("rising-lava-enabled")) {
+            return;
+        }
+
+        World world = Bukkit.getWorld("world");
+
+        if (world == null) {
+            getLogger().severe("(Rising lava) No World found. Please use default level names");
+            return;
+        }
+
+        WorldBorder border = world.getWorldBorder();
+
+        Location borderCenter = border.getCenter();
+        double borderRadius = (border.getSize() / 2) + 1;
+
+        new BukkitRunnable() {
+            private int level = -64;
+
+            @Override
+            public void run() {
+                if (gamePhase == GamePhase.GAME_OVER) {
+                    cancel();
+                    return;
+                }
+
+                Location minLocation = borderCenter.clone()
+                        .add(borderRadius, 0, borderRadius);
+                Location maxLocation = borderCenter.clone()
+                        .subtract(borderRadius, 0, borderRadius);
+
+                minLocation.setY(level);
+                maxLocation.setY(level);
+
+                fillArea(minLocation, maxLocation, Material.LAVA);
+
+                level++;
+            }
+        }.runTaskTimer(this, 0L, getConfiguration().getInt("rising-lava-level-time", 40));
+    }
+
+    public void fillArea(Location loc1, Location loc2, Material material) {
+        World world = loc1.getWorld();
+        if (world == null || !world.equals(loc2.getWorld())) {
+            throw new IllegalArgumentException("Locations must be in the same world!");
+        }
+
+        // Calculate the bounding box min and max coordinate
+        int minX = Math.min(loc1.getBlockX(), loc2.getBlockX());
+        int maxX = Math.max(loc1.getBlockX(), loc2.getBlockX());
+        int minY = Math.min(loc1.getBlockY(), loc2.getBlockY());
+        int maxY = Math.max(loc1.getBlockY(), loc2.getBlockY());
+        int minZ = Math.min(loc1.getBlockZ(), loc2.getBlockZ());
+        int maxZ = Math.max(loc1.getBlockZ(), loc2.getBlockZ());
+
+        for (int x = minX; x <= maxX; x++) {
+            for (int y = minY; y <= maxY; y++) {
+                for (int z = minZ; z <= maxZ; z++) {
+                    Block block = world.getBlockAt(x, y, z);
+                    block.setType(material, false);
+                }
+            }
         }
     }
 
