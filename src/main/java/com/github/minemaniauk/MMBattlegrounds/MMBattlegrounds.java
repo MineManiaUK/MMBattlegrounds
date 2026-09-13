@@ -843,6 +843,11 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
                     return;
                 }
 
+                if (level >= getConfiguration().getInt("rising-lava-max-level", 319)) {
+                    cancel();
+                    return;
+                }
+
                 Location minLocation = borderCenter.clone()
                         .add(borderRadius, 0, borderRadius);
                 Location maxLocation = borderCenter.clone()

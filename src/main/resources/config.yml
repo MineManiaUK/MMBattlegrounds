@@ -34,6 +34,9 @@ rising-lava-enabled: false
 # How long the lava takes to rise 1 block in ticks (40 = 2secs)
 rising-lava-level-time: 40
 
+# When should rising lava stop (Exclusive value e.g. value 100 lava stops at 99)
+rising-lava-max-level: 319
+
 # Damage effect balancing systems
 # Enables or disables the entire damage balancing system.
 damage-balance-enabled: true
