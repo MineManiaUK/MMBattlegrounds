@@ -903,6 +903,7 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
                     new String[]{"Killed by", "Projectile"};
             case ENTITY_ATTACK, ENTITY_SWEEP_ATTACK ->
                     new String[]{"Killed by", "Mob"};
+            case WORLD_BORDER -> new String[]{"Died from", "World Border"};
             default ->
                     new String[]{"Died from", "Unknown"};
         };
