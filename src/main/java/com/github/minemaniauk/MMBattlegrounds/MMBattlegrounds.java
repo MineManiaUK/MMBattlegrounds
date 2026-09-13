@@ -21,11 +21,17 @@ import net.megavex.scoreboardlibrary.api.noop.NoopScoreboardLibrary;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.Sign;
+import org.bukkit.block.Skull;
+import org.bukkit.block.data.type.WallSign;
+import org.bukkit.block.sign.Side;
+import org.bukkit.block.sign.SignSide;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -64,6 +70,7 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
     public GamePhase gamePhase;
     public List<Player> alivePlayers = new ArrayList<>(); // Used in sudden death
     private final Map<UUID, Long> combatTags = new HashMap<>();
+    private final Set<Location> graves = new HashSet<>();
 
     @Override
     public void onEnable() {
@@ -278,7 +285,7 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
     }
 
     private void onPlayerSpawn(Player player) {
-        if (player.getGameMode() != GameMode.SURVIVAL) {
+        if (player.getGameMode() != GameMode.SURVIVAL || gamePhase != GamePhase.NORMAL) {
             return;
         }
 
@@ -349,6 +356,7 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
 
+
         if (event.getEntity().getKiller() != null){
             combatTags.remove(event.getEntity().getKiller().getUniqueId());
             event.getEntity().getKiller().sendMessage(ChatColor.GREEN + "You are no longer in combat");
@@ -377,6 +385,7 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
         if (gamePhase != GamePhase.NORMAL) {
 
             Location deathLocation = player.getLocation().clone();
+            placeDeathStone(event, deathLocation);
 
             getServer().getScheduler().runTask(this, () -> {
                 player.spigot().respawn();
@@ -816,6 +825,110 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
         }
     }
 
+    public void placeDeathStone(PlayerDeathEvent event, Location location) {
+        Player player = event.getEntity();
+        World world = Bukkit.getWorld("world");
+
+        if (world == null) {
+            getLogger().severe("No World found. Please use default level names");
+            return;
+        }
+
+        Block mainBlock = world.getBlockAt(location);
+        mainBlock.setType(Material.COBBLESTONE);
+        graves.add(mainBlock.getLocation());
+
+        BlockFace face = BlockFace.NORTH;
+
+        Block signBlock = mainBlock.getRelative(face);
+        signBlock.setType(Material.OAK_WALL_SIGN, false);
+
+        WallSign wallSign = (WallSign) signBlock.getBlockData();
+        wallSign.setFacing(face);
+        signBlock.setBlockData(wallSign, false);
+
+        Sign sign = (Sign) signBlock.getState();
+
+        String[] deathText = getDeathText(event);
+
+        SignSide front = sign.getSide(Side.FRONT);
+
+        front.setLine(0, player.getName());
+        front.setLine(1, deathText[0]);
+        front.setLine(2, deathText[1]);
+        front.setLine(3, "");
+
+        sign.update(true, false);
+
+        Block headBlock = mainBlock.getRelative(BlockFace.UP);
+        headBlock.setType(Material.PLAYER_HEAD);
+
+        Skull skullState = (Skull) headBlock.getState();
+        skullState.setOwningPlayer(event.getEntity());
+        skullState.update();
+    }
+
+    private String[] getDeathText(PlayerDeathEvent event) {
+        Player player = event.getEntity();
+
+        if (player.getKiller() != null) {
+            return new String[] {
+                    "Killed by",
+                    player.getKiller().getName()
+            };
+        }
+
+        EntityDamageEvent damage = player.getLastDamageCause();
+
+        if (damage == null) {
+            return new String[] {
+                    "Died from",
+                    "Unknown"
+            };
+        }
+
+        return switch (damage.getCause()) {
+            case FALL -> new String[]{"Died from", "Falling"};
+            case LAVA -> new String[]{"Died in", "Lava"};
+            case FIRE, FIRE_TICK -> new String[]{"Died from", "Fire"};
+            case DROWNING -> new String[]{"Died from", "Drowning"};
+            case SUFFOCATION -> new String[]{"Died from", "Suffocation"};
+            case STARVATION -> new String[]{"Died from", "Starvation"};
+            case VOID -> new String[]{"Died in", "The Void"};
+            case FREEZE -> new String[]{"Died from", "Freezing"};
+            case LIGHTNING -> new String[]{"Died from", "Lightning"};
+            case BLOCK_EXPLOSION, ENTITY_EXPLOSION ->
+                    new String[]{"Died from", "Explosion"};
+            case PROJECTILE ->
+                    new String[]{"Killed by", "Projectile"};
+            case ENTITY_ATTACK, ENTITY_SWEEP_ATTACK ->
+                    new String[]{"Killed by", "Mob"};
+            default ->
+                    new String[]{"Died from", "Unknown"};
+        };
+    }
+
+    @EventHandler
+    public void onBlockBreak(BlockBreakEvent event) {
+        Block broken = event.getBlock();
+
+        for (Location graveLocation : graves) {
+            Block mainBlock = graveLocation.getBlock();
+
+            Block signBlock = mainBlock.getRelative(BlockFace.NORTH);
+            Block topBlock = mainBlock.getRelative(BlockFace.UP);
+
+            if (broken.equals(mainBlock)
+                    || broken.equals(signBlock)
+                    || broken.equals(topBlock)) {
+
+                event.setCancelled(true);
+                event.getPlayer().sendMessage(ChatColor.RED + "You cannot break this grave.");
+                return;
+            }
+        }
+    }
+
     public void startRisingLava() {
         if (!getConfig().getBoolean("rising-lava-enabled")) {
             return;
@@ -838,12 +951,7 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
 
             @Override
             public void run() {
-                if (gamePhase == GamePhase.GAME_OVER) {
-                    cancel();
-                    return;
-                }
-
-                if (level >= getConfiguration().getInt("rising-lava-max-level", 319)) {
+                if (gamePhase == GamePhase.GAME_OVER || level >= getConfiguration().getInt("rising-lava-max-level", 319)) {
                     cancel();
                     return;
                 }
