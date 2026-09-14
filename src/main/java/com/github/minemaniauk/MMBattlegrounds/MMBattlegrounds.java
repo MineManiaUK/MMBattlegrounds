@@ -32,6 +32,7 @@ import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -925,6 +926,23 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
 
                 event.setCancelled(true);
                 event.getPlayer().sendMessage(ChatColor.RED + "You cannot break this grave.");
+                return;
+            }
+        }
+    }
+
+    @EventHandler
+    public void onSignEdit(SignChangeEvent event) {
+        Block edited = event.getBlock();
+
+        for (Location graveLocation : graves) {
+            Block mainBlock = graveLocation.getBlock();
+
+            Block signBlock = mainBlock.getRelative(BlockFace.NORTH);
+
+            if (edited.equals(signBlock)) {
+                event.setCancelled(true);
+                event.getPlayer().sendMessage(ChatColor.RED + "You cannot edit this grave.");
                 return;
             }
         }
