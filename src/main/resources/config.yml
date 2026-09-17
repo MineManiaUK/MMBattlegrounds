@@ -22,6 +22,9 @@ show-drop-timetable: false
 # The drop timetable link
 drop-timetable-link:
 
+# The Schem file location
+drop-file: "drop.schem"
+
 # Min amount of ticks which a drop takes to fall
 drop-mix-ticks: 4800
 

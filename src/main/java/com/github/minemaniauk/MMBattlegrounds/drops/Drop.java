@@ -29,6 +29,7 @@ import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 public class Drop {
 
@@ -193,7 +194,7 @@ public class Drop {
             return;
         }
 
-        File schemFile = new File(plugin.getDataFolder(), "drop.schem");
+        File schemFile = new File(plugin.getDataFolder(), Objects.requireNonNull(MMBattlegrounds.getInstance().getConfig().getString("drop-file")));
 
         if (!schemFile.exists()) {
             plugin.getLogger().warning("Schematic not found: " + schemFile.getPath());
