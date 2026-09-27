@@ -12,6 +12,7 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 public class PlayerDataCommand implements TabExecutor {
@@ -104,7 +105,7 @@ public class PlayerDataCommand implements TabExecutor {
 
             return Bukkit.getOnlinePlayers().stream()
                     .map(Player::getName)
-                    .filter(s -> s.startsWith(prefix))
+                    .filter(s -> s.toLowerCase(Locale.ROOT).startsWith(prefix))
                     .toList();
         }
 
