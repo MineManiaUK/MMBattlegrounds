@@ -51,6 +51,7 @@ public class Drop implements Listener {
 
         this.location = loadLocation(data, getLocationPath());
         this.inventory = loadInventory(data, getInventoryPath(), name + " Supply Drop");
+        Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
     private String getBasePath() {
