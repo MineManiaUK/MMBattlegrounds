@@ -12,14 +12,16 @@ import com.sk89q.worldedit.function.operation.Operation;
 import com.sk89q.worldedit.function.operation.Operations;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.session.ClipboardHolder;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.World;
+import org.bukkit.*;
+import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -31,13 +33,15 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public class Drop {
+public class Drop implements Listener {
 
     public final String name;
     public Location location;
     public Inventory inventory;
 
     private final MMBattlegrounds plugin;
+    private Location chestLocation;
+    private boolean chestTampered; // (Opened or broken)
 
     public Drop(String name) {
         this.name = name;
@@ -47,6 +51,7 @@ public class Drop {
 
         this.location = loadLocation(data, getLocationPath());
         this.inventory = loadInventory(data, getInventoryPath(), name + " Supply Drop");
+        Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
     private String getBasePath() {
@@ -166,6 +171,8 @@ public class Drop {
                     return;
                 }
 
+                chestLocation = chest.getLocation();
+
                 Inventory chestInventory = chest.getInventory();
 
                 copyInventory(inventory, chestInventory);
@@ -185,8 +192,6 @@ public class Drop {
 
         return activeArc;
     }
-
-
 
     private void spawnSchem(JavaPlugin plugin, Location pasteLocation) {
         if (pasteLocation == null || pasteLocation.getWorld() == null) {
@@ -376,5 +381,30 @@ public class Drop {
         float pitch = section.contains("pitch") ? (float) section.getDouble("pitch") : 0.0f;
 
         return new Location(world, x, y, z, yaw, pitch);
+    }
+
+    @EventHandler
+    public void onBlockBreak(BlockBreakEvent event) {
+        Block block = event.getBlock();
+        if (chestLocation == null) return;
+        if (block.getLocation() != chestLocation) return;
+        if (chestTampered) return;
+
+        plugin.getRestictionManager().enableAllForDuration(
+                plugin.getRestictionManager().getDropKeepInventoryDurationTicks()
+        );
+        chestTampered = true;
+    }
+
+    @EventHandler
+    public void onChestOpen(PlayerInteractEvent event) {
+        if (!event.hasBlock()) return;
+        if (event.getClickedBlock().getType() != Material.CHEST) return;
+        if (event.getClickedBlock().getLocation() != chestLocation) return;
+
+        plugin.getRestictionManager().enableAllForDuration(
+                plugin.getRestictionManager().getDropKeepInventoryDurationTicks()
+        );
+        chestTampered = true;
     }
 }
