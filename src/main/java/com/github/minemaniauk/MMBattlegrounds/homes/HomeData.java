@@ -36,18 +36,18 @@ public class HomeData {
         FileConfiguration dataFile = new YamlConfiguration();
 
         for (Map.Entry<String, Home> entry : homes.entrySet()) {
-            dataFile.set(entry.getKey() + ".location", entry.getValue().location);
+            dataFile.set("homes." + entry.getKey() + ".location", entry.getValue().location);
         }
 
         MMBattlegrounds.getInstance().savePlayerData(player, dataFile);
     }
 
     public static HomeData load(Player player) {
-        FileConfiguration dataFile = MMBattlegrounds.getInstance().loadPlayerData(player);
+        ConfigurationSection homeData = MMBattlegrounds.getInstance().loadPlayerData(player).getConfigurationSection("homes");
 
         HashMap<String, Home> homeMap = new HashMap<>();
-        for (String key : dataFile.getKeys(false)) {
-            ConfigurationSection section = dataFile.getConfigurationSection(key);
+        for (String key : homeData.getKeys(false)) {
+            ConfigurationSection section = homeData.getConfigurationSection(key);
             if (section == null || !section.isLocation("location")) {
                 continue;
             }
