@@ -244,9 +244,7 @@ public class DropManager {
                 getPlugin().getScoreboardManager().updateDropStatuses();
             }
         });
-        getPlugin().getRestictionManager().enableAllForDuration(
-                getPlugin().getRestictionManager().getDropKeepInventoryDurationTicks()
-        );
+        getPlugin().getRestictionManager().enableAll();
         return SpawnResult.STARTED;
     }
 

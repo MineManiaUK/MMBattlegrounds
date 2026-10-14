@@ -81,7 +81,7 @@ keep-inventory-force-alerts: true
 keep-inventory-force-warning-ticks: 1200
 
 # How long a drop force-enables keep inventory for
-drop-keep-inventory-force-duration-ticks: 12000
+drop-keep-inventory-force-duration-ticks: 6000
 
 # Time in seconds after a player attack during which a death counts as a player kill
 combat-tag-time: 15
