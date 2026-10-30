@@ -74,12 +74,11 @@ public class Drop implements Listener {
         plugin.saveData();
     }
 
-    public void setInventory(Inventory sourceInventory) {
+    public boolean setInventory(Inventory sourceInventory) {
         if (sourceInventory == null) {
             this.inventory = null;
             saveInventory(plugin.getData(), getInventoryPath(), null);
-            plugin.saveData();
-            return;
+            return plugin.saveData();
         }
 
         Inventory copy = Bukkit.createInventory(
@@ -88,16 +87,19 @@ public class Drop implements Listener {
                 name + " Supply Drop"
         );
 
-        copy.setContents(sourceInventory.getContents());
+        copyInventory(sourceInventory, copy);
 
         this.inventory = copy;
 
         saveInventory(plugin.getData(), getInventoryPath(), copy);
 
-        plugin.saveData();
+        if (!plugin.saveData()) {
+            return false;
+        }
 
         plugin.getLogger().info("Saved drop '" + name + "' inventory with "
                 + countItems(copy) + " item stacks.");
+        return true;
     }
 
     public Inventory createEditorInventory() {

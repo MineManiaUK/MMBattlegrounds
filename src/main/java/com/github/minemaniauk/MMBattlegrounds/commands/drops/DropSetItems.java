@@ -15,10 +15,7 @@ public class DropSetItems implements CommandExecutor {
         if (sender instanceof Player player) {
             DropManager manager = MMBattlegrounds.getInstance().getDropManager();
 
-            if (!manager.openInventoryEditor(player)) {
-                sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&c&l> &cA drop is not selected"));
-                return true;
-            }
+            manager.openInventoryEditor(player);
 
             return true;
         }

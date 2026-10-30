@@ -155,6 +155,9 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
+        if (dropManager != null) {
+            dropManager.closeEditors();
+        }
         if (restrictionManager != null) {
             restrictionManager.disableAllSilently();
         }
@@ -192,6 +195,9 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onPlayerLeave(PlayerQuitEvent event) {
+        if (dropManager != null) {
+            dropManager.handlePlayerQuit(event.getPlayer());
+        }
         scoreboardManager.removePlayerScoreBoard(event.getPlayer());
 
         if (isTagged(event.getPlayer())) {
@@ -1025,14 +1031,16 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
         }
     }
 
-    public void saveData() {
+    public boolean saveData() {
         try {
             data.save(dataFile);
+            return true;
         }
         catch (IOException e) {
             getLogger().severe("Failed to save data");
             getLogger().severe(e.getMessage());
             getLogger().severe(e.getStackTrace().toString());
+            return false;
         }
     }
 

@@ -7,8 +7,8 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.HandlerList;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
-import org.bukkit.event.player.PlayerCommandSendEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -49,6 +49,7 @@ public class DropManager {
     public HashMap<Player, Drop> selectedDrop = new HashMap<>();
     private final Map<String, DropParticleManager.ActiveArc> activeDrops = new HashMap<>();
     private final Map<UUID, DropEditorSession> activeEditorSessions = new HashMap<>();
+    private final Map<String, Drop> dropsByName = new HashMap<>();
     private boolean lastDropCancelled;
 
     public DropManager(JavaPlugin plugin) {
@@ -69,7 +70,7 @@ public class DropManager {
             return false;
         }
 
-        selectedDrop.put(player, new Drop(name));
+        selectedDrop.put(player, getDrop(name));
         return true;
     }
 
@@ -102,18 +103,22 @@ public class DropManager {
         }
 
         cancel(name);
+        Drop removed = dropsByName.remove(name);
+        if (removed != null) {
+            HandlerList.unregisterAll(removed);
+        }
         section.set(name, null);
         getPlugin().saveData();
 
         activeEditorSessions.entrySet().removeIf(entry ->
                 entry.getValue() != null
                         && entry.getValue().drop != null
-                        && entry.getValue().drop.name.equalsIgnoreCase(name)
+                        && entry.getValue().drop.name.equals(name)
         );
 
         selectedDrop.entrySet().removeIf(entry ->
                 entry.getValue() != null
-                        && entry.getValue().name.equalsIgnoreCase(name)
+                        && entry.getValue().name.equals(name)
         );
 
         return true;
@@ -130,7 +135,7 @@ public class DropManager {
 
         for (String key : section.getKeys(false)) {
             if (section.isConfigurationSection(key)) {
-                drops.add(new Drop(key));
+                drops.add(getDrop(key));
             }
         }
 
@@ -148,24 +153,45 @@ public class DropManager {
             return null;
         }
 
-        return new Drop(name);
+        return dropsByName.computeIfAbsent(name, Drop::new);
     }
 
     public Drop getSelectedDrop(Player player) {
-        return selectedDrop.get(player);
+        Drop selected = selectedDrop.get(player);
+        return selected == null ? null : getDrop(selected.name);
     }
 
     public boolean openInventoryEditor(Player player) {
         Drop drop = getSelectedDrop(player);
 
         if (drop == null) {
+            player.sendMessage(ChatColor.RED + "A drop is not selected");
             return false;
         }
 
+        for (DropEditorSession session : activeEditorSessions.values()) {
+            if (session.drop == drop) {
+                player.sendMessage(ChatColor.RED + "This drop is already being edited. Try again once that editor is closed.");
+                return false;
+            }
+        }
+
+        // Closing an old editor saves it before a new snapshot is created.
+        player.closeInventory();
         Inventory editor = drop.createEditorInventory();
-        player.openInventory(editor);
-        activeEditorSessions.put(player.getUniqueId(), new DropEditorSession(drop, editor));
-        return true;
+        DropEditorSession session = new DropEditorSession(drop, editor);
+        activeEditorSessions.put(player.getUniqueId(), session);
+        boolean opened = false;
+        try {
+            opened = player.openInventory(editor) != null
+                    && player.getOpenInventory().getTopInventory() == editor;
+            return opened;
+        } finally {
+            // InventoryOpenEvent may be cancelled by another plugin.
+            if (!opened) {
+                activeEditorSessions.remove(player.getUniqueId(), session);
+            }
+        }
     }
 
     public void handleInventoryClose(Player player, Inventory inventory) {
@@ -181,7 +207,8 @@ public class DropManager {
 
         activeEditorSessions.remove(player.getUniqueId());
 
-        if (getDrop(session.drop.name) == null) {
+        Drop drop = getDrop(session.drop.name);
+        if (drop != session.drop) {
             player.sendMessage(ChatColor.translateAlternateColorCodes(
                     '&',
                     "&c&l> &cThe selected drop no longer exists"
@@ -189,11 +216,37 @@ public class DropManager {
             return;
         }
 
-        session.drop.setInventory(inventory);
+        if (!drop.setInventory(inventory)) {
+            player.sendMessage(ChatColor.RED + "Could not save the drop inventory to disk. Check the server log.");
+            return;
+        }
         player.sendMessage(ChatColor.translateAlternateColorCodes(
                 '&',
                 "&7&l> &aSaved &7the drop inventory"
         ));
+    }
+
+    public void handlePlayerQuit(Player player) {
+        try {
+            DropEditorSession session = activeEditorSessions.get(player.getUniqueId());
+            if (session != null) {
+                handleInventoryClose(player, session.inventory);
+            }
+        } finally {
+            activeEditorSessions.remove(player.getUniqueId());
+            selectedDrop.remove(player);
+        }
+    }
+
+    public void closeEditors() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (activeEditorSessions.containsKey(player.getUniqueId())) {
+                handlePlayerQuit(player);
+                player.closeInventory();
+            }
+        }
+        activeEditorSessions.clear();
+        selectedDrop.clear();
     }
 
     public SpawnResult spawnSelectedDrop(Player player) {
