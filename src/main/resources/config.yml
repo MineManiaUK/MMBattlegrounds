@@ -61,6 +61,15 @@ damage-balance-effects-max-level: 5
 # 0.10 = 10% per level
 damage-balance-damage-per-level: 0.10
 
+# Players lose one heart of permanent health per kill in sudden death
+sudden-death-health-degrading-enabled: false
+
+# The min value which health can be limited to (range 0-20)
+sudden-death-health-degrading-min-health: 10
+
+# The amount a players health changes by per kill
+sudden-death-health-degrading-health-step: 2
+
 # Enable end crystal explosions
 end-crystal-entity-damage: false
 end-crystal-block-damage: false

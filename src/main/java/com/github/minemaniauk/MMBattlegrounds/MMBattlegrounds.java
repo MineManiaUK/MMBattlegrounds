@@ -387,6 +387,7 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
 
             Location deathLocation = player.getLocation().clone();
             placeDeathStone(event, deathLocation);
+            deathLocation.getWorld().strikeLightningEffect(deathLocation);
 
             getServer().getScheduler().runTask(this, () -> {
                 player.spigot().respawn();
