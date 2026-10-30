@@ -112,7 +112,10 @@ rising-lava-level-time: 40
 
 # Damage effect balancing systems
 # Enables or disables the entire damage balancing system.
-damage-balance-enabled: true
+damage-balance-enabled:
+
+# Is the damage balancing level visible to players in the sidebar
+damage-balance-visable: false
 
 # The neutral K/D difference range before any balance modifier starts.
 damage-balance-effects-zero-range: 5

@@ -42,7 +42,10 @@ rising-lava-max-level: 319
 
 # Damage effect balancing systems
 # Enables or disables the entire damage balancing system.
-damage-balance-enabled: true
+damage-balance-enabled: false
+
+# Is the damage balancing level visible to players in the sidebar
+damage-balance-visable: false
 
 # The neutral K/D difference range before any balance modifier starts.
 damage-balance-effects-zero-range: 5
