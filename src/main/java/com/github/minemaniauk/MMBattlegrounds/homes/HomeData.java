@@ -43,11 +43,19 @@ public class HomeData {
     }
 
     public static HomeData load(Player player) {
-        ConfigurationSection homeData = MMBattlegrounds.getInstance().loadPlayerData(player).getConfigurationSection("homes");
+        ConfigurationSection homeData = MMBattlegrounds.getInstance()
+                .loadPlayerData(player)
+                .getConfigurationSection("homes");
 
         HashMap<String, Home> homeMap = new HashMap<>();
+
+        if (homeData == null) {
+            return new HomeData(player, homeMap);
+        }
+
         for (String key : homeData.getKeys(false)) {
             ConfigurationSection section = homeData.getConfigurationSection(key);
+
             if (section == null || !section.isLocation("location")) {
                 continue;
             }
