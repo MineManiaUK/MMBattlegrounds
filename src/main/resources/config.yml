@@ -42,7 +42,10 @@ rising-lava-max-level: 319
 
 # Damage effect balancing systems
 # Enables or disables the entire damage balancing system.
-damage-balance-enabled: true
+damage-balance-enabled: false
+
+# Is the damage balancing level visible to players in the sidebar
+damage-balance-visable: false
 
 # The neutral K/D difference range before any balance modifier starts.
 damage-balance-effects-zero-range: 5
@@ -57,6 +60,15 @@ damage-balance-effects-max-level: 5
 # Percentage damage change applied per balance level.
 # 0.10 = 10% per level
 damage-balance-damage-per-level: 0.10
+
+# Players lose one heart of permanent health per kill in sudden death
+sudden-death-health-degrading-enabled: false
+
+# The min value which health can be limited to (range 0-20)
+sudden-death-health-degrading-min-health: 10
+
+# The amount a players health changes by per kill
+sudden-death-health-degrading-health-step: 2
 
 # Enable end crystal explosions
 end-crystal-entity-damage: false
@@ -81,7 +93,7 @@ keep-inventory-force-alerts: true
 keep-inventory-force-warning-ticks: 1200
 
 # How long a drop force-enables keep inventory for
-drop-keep-inventory-force-duration-ticks: 12000
+drop-keep-inventory-force-duration-ticks: 6000
 
 # Time in seconds after a player attack during which a death counts as a player kill
 combat-tag-time: 15

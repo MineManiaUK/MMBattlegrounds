@@ -20,7 +20,7 @@ import org.bukkit.scheduler.BukkitTask;
 
 public class RestrictionManager implements Listener {
 
-    private static final long DEFAULT_DROP_KEEP_INVENTORY_DURATION_TICKS = 20L * 60L * 10L;
+    private static final long DEFAULT_DROP_KEEP_INVENTORY_DURATION_TICKS = 20L * 60L * 5L;
     private static final long DEFAULT_KEEP_INVENTORY_WARNING_TICKS = 20L * 60L;
 
     private final MMBattlegrounds plugin;

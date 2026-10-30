@@ -19,6 +19,7 @@ import net.megavex.scoreboardlibrary.api.ScoreboardLibrary;
 import net.megavex.scoreboardlibrary.api.exception.NoPacketAdapterAvailableException;
 import net.megavex.scoreboardlibrary.api.noop.NoopScoreboardLibrary;
 import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
@@ -154,6 +155,9 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
+        if (dropManager != null) {
+            dropManager.closeEditors();
+        }
         if (restrictionManager != null) {
             restrictionManager.disableAllSilently();
         }
@@ -191,6 +195,9 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onPlayerLeave(PlayerQuitEvent event) {
+        if (dropManager != null) {
+            dropManager.handlePlayerQuit(event.getPlayer());
+        }
         scoreboardManager.removePlayerScoreBoard(event.getPlayer());
 
         if (isTagged(event.getPlayer())) {
@@ -357,7 +364,6 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
 
-
         if (event.getEntity().getKiller() != null){
             combatTags.remove(event.getEntity().getKiller().getUniqueId());
             event.getEntity().getKiller().sendMessage(ChatColor.GREEN + "You are no longer in combat");
@@ -387,6 +393,7 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
 
             Location deathLocation = player.getLocation().clone();
             placeDeathStone(event, deathLocation);
+            deathLocation.getWorld().strikeLightningEffect(deathLocation);
 
             getServer().getScheduler().runTask(this, () -> {
                 player.spigot().respawn();
@@ -398,6 +405,16 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
 
             for (PotionEffect effect : player.getActivePotionEffects()) {
                 player.removePotionEffect(effect.getType());
+            }
+
+            if (player.getKiller() != null) {
+                if (getConfig().getBoolean("sudden-death-health-degrading-enabled")) {
+                    Player killer = player.getKiller();
+                    double playerCurrentMaxHealth = killer.getAttribute(Attribute.MAX_HEALTH).getBaseValue();
+                    if (!(playerCurrentMaxHealth <= getConfig().getDouble("sudden-death-health-degrading-min-health"))) {
+                        killer.getAttribute(Attribute.MAX_HEALTH).setBaseValue(playerCurrentMaxHealth - getConfig().getDouble("sudden-death-health-degrading-health-step"));
+                    }
+                }
             }
 
             if (alivePlayers.size() <= 1) {
@@ -1014,14 +1031,16 @@ public final class MMBattlegrounds extends JavaPlugin implements Listener {
         }
     }
 
-    public void saveData() {
+    public boolean saveData() {
         try {
             data.save(dataFile);
+            return true;
         }
         catch (IOException e) {
             getLogger().severe("Failed to save data");
             getLogger().severe(e.getMessage());
             getLogger().severe(e.getStackTrace().toString());
+            return false;
         }
     }
 

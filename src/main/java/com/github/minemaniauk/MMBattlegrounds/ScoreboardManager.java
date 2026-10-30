@@ -49,7 +49,7 @@ public class ScoreboardManager {
                         ))
         );
 
-        if (getPlugin().getConfig().getBoolean("damage-balance-enabled")) {
+        if (getPlugin().getConfig().getBoolean("damage-balance-enabled") && getPlugin().getConfig().getBoolean("damage-balance-visable")) {
             int balanceLevel = getPlugin()
                     .getBalanceSystemManager()
                     .getPermanentBalanceLevel(player);
@@ -184,7 +184,7 @@ public class ScoreboardManager {
                             ))
             );
 
-            if (getPlugin().getConfig().getBoolean("damage-balance-enabled")) {
+            if (getPlugin().getConfig().getBoolean("damage-balance-enabled") && getPlugin().getConfig().getBoolean("damage-balance-visable")) {
                 int balanceLevel = getPlugin()
                         .getBalanceSystemManager()
                         .getPermanentBalanceLevel(p);
